@@ -5,7 +5,7 @@ warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 import pandas as pd
 from code_helpers.create_metro_df import create_metro_df
- 
+from config import Config
 
 def convert_to_int(num):
     """."""    
@@ -30,7 +30,7 @@ def parse_process_df(text_list, log, VERBOSE):
 
     insert_row = []
 
-    df_orig, df, df_debug = create_metro_df(text_list)
+    df_orig, df, df_debug = create_metro_df(text_list, VERBOSE)
     df = df.reset_index()
     
     #Create DF_CAT:
@@ -42,12 +42,6 @@ def parse_process_df(text_list, log, VERBOSE):
     if df_cat.iloc[-1,-1]==0 and df_cat.shape[0]>0:
         df_cat.iloc[-1,-1] = df.shape[0]
 
-
-    
-    # df_cat.to_csv("df_cat.csv")
-    # df.to_csv("df.csv")
-    # df_orig.to_csv("df_orig.csv")
-    # df_debug.to_csv("df_debug.csv")
 
     if PPDF_PRNSTMT: 
         print(f"\ndf: {df}")
@@ -100,8 +94,10 @@ def parse_process_df(text_list, log, VERBOSE):
                 item = item_str# + " " + cost_str
                 da_item[i] = 0
                 da_item[i-1] = 0
-                if PPDF_PRNSTMT:print("insert_row: PRODUCE", item,"------->", price)
-                log.info("insert_row:" + str(item) + str(price))
+                
+                if PPDF_PRNSTMT:
+                    print("Item Found: PRODUCE", item,"------->", price)
+                    log.info("Item Found:" + str(item) + str(price))
     
                 insert_row.append(("PRODUCE", item, price))
             else:
@@ -130,8 +126,7 @@ def parse_process_df(text_list, log, VERBOSE):
         log.info("\n end parse_process_df:\n")
         print("-------------\n", insert_row, ": insert_row")
         print("\n end parse_process_df:\n")
-
-    
+  
     total = 0.0
     for row in insert_row:
         total = row[2] + total

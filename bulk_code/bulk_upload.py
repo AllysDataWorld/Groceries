@@ -121,7 +121,7 @@ def bulk_upload(fuzzy, folder_path, logger, thisStore):
                     thisDate = date(year, month, day)
                 
                 if thisDate=="":
-                    thisDate = get_toronto_time()
+                    thisDate = uts.get_toronto_time()
                     user_input = input(f'No date was set: Press 1 to end process or Press any number to continue uploading receipt with todays date {thisDate} ')
                     if int(user_input) == 1:
                         exit()
