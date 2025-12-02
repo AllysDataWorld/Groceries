@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <script>
+        function goToBulkInsert() {
+            window.location.href = "/bulk_insert/";
+        }
+        
+        function deleteTemp() {
+            window.location.href = "/delete_all_Grocery_TEMP_Items/";
+        }    
+
+        function guessLabelForNewItems() {
+            window.location.href = "/guess_label_for_new_items/";
+        }
+        
+        function lastUpload() {
+            window.location.href = "/last_upload/";
+        }        
+                 
+    </script>
+{% endblock %}
+
+{% block body %}
+
+<p><h1 align="center">TEMP<br>Items Database</h1></p>
+
+    <div class="container">
+        <div class="row">
+            <div>
+                <p>
+                    {% with messages = get_flashed_messages() %}
+                      {% if messages %}
+                        <ul class="flashes">
+                        {% for message in messages %}
+                          <li>{{ message }}</li>
+                        {% endfor %}
+                        </ul>
+                      {% endif %}
+                    {% endwith %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+<TABLE>
+  <tr>
+    <th>Receipt Uploaded </th>
+    <th>Receipt Items</th> 
+  </tr>
+  <tr>
+    <td>
+    
+    <div class="content">
+        {% if tasks|length > 0 %}		
+        <div class="container" align="center">
+            <button class="nice-button" onclick="goToBulkInsert()">Save All Items!</button>
+            <button class="nice-button_red" onclick="deleteTemp()">Delete and ReUpload!</button>
+        </div>
+        {% else %}
+        <div class="container" align="center">
+            <button class="nice-button" onclick="window.location.href='/upload/'">Upload New Receipt</button>
+        </div>
+        {% endif %}
+        
+        <div class="container">
+            <div class="row">
+                {% if filename %}
+                    <div>
+                        <img src="{{ url_for('display_image', filename=filename) }}" width="500" height="600">
+                        <br><br>
+                    </div>
+                {% endif %}
+            </div>
+        </div>        
+            
+        
+    </div>    
+    
+    
+    
+    </td>
+    <td>
+    
+    <div class="content">
+        {% if tasks|length < 1 %}
+        <h4 style="text-align: center">There are no uploaded receipts. Upload a new receipt!</h4>
+        {% else %}
+        
+        <div class="container" align="center">
+            <button class="nice-button_blue" onclick="guessLabelForNewItems()">Guess for New Items!</button>
+        </div>
+
+        <table>
+            <tr>
+                <th>ID</th>  
+                <th>Filename</th>        
+                <th>Store Name</th>
+                <th>Store Category</th>
+                <th>Store Item</th>
+                <th>My Category</th>
+                <th>My Item</th>			
+                <th>Price</th>
+                <th>Date on Receipt</th>                
+                <th>DateTime on Receipt</th>                
+                <th>Actions</th>
+            </tr>
+            {% for task in tasks %}
+                <tr>
+                    <th>{{task.id}}</th>
+                    <th>{{task.filename}}</th>            
+                    <td>{{ task.storeName }}</td>
+                    <td>{{ task.storeCategory }}</td>                
+                    <td>{{ task.storeItem }}</td>
+                    <td>{{ task.myCategory }}</td>
+                    <td>{{ task.myItem }}</td>
+                    <td>${{ "%.2f"|format(task.price) }}</td>
+                    <td>{{ task.recepitDate.date().strftime('%d-%m-%Y') }}</td>
+                    <td>{{ task.recepitDate.time().strftime("%H:%M:%S") }}</td>
+                    <td>
+                        <a href="/delete_temp_item/{{task.id}}">Delete</a>
+                        <br>
+                        <a href="/update_items_temp_db/{{task.id}}">Update</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        {% endif %}
+    </div>    
+    
+    </td>
+  </tr>
+</TABLE>
+
+
+
+
+
+
+
+    <br>
+    <hr>
+    <hr>
+    <br>
+    
+    <h4 style="text-align: center">Example Values!</h4>
+    <p></p>    
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Store Category</th>      
+          <th scope="col">Store Item</th>
+          <th scope="col">My Category</th>
+          <th scope="col">My Item</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">1</th>
+          <td>Grocery</td>      
+          <td>Kashi Go Lean</td>
+          <td>Cereal</td> 
+          <td>Kashi</td>           
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>Produce</td>
+          <td>HASS AVOCADO</td>      
+          <td>Veggie</td>
+          <td>bag of avocado</td>      
+        </tr>
+      </tbody>
+    </table>
+
+{% endblock %}

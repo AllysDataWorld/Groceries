@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<p><h1 align="center">HOME Groceries</h1></p>
+</br></br>
+<h2 align="center">This is the homepage</h2>
+
+</br></br>
+</br></br>
+
+<h5 align="center">The Shopping List is...</h2>
+
+
+</br></br>
+</br></br>
+
+
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+    </br></br>
+	</br></br>
+
+    {% if filename %}
+        <div>
+            <img src="{{ url_for('display_image', filename=filename) }}">
+        </div>
+    {% endif %}
+    
+{% endblock %}

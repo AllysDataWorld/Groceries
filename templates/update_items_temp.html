@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center">Update Temp Items</h1>
+
+
+        </form>
+    </div>
+</div>
+
+
+   
+    <div class="form-group">
+
+        <table>
+          <form action="/update_items_temp_db/{{task.id}}/" method="POST">
+              <tr>
+                  <th>ID</th>        
+                  <th>Store Name</th>
+                  <th>Store Category</th>
+                  <th>Store Item</th>
+                                    
+                  <th>My Category</th>
+                  <th>My Item</th>
+                  <th>Price</th>  
+                  <th>Date on Receipt</br>(Change to a Future Date</br> Else date will not be updated)</th>                
+              </tr>     
+              <tr>
+                <th>{{task.id}}</th>            
+                <td><input type="text" name="updated_storeName" id="storeName" value="{{task.storeName}}"></td>
+                <td><input type="text" name="updated_storeCategory" id="storeCategory" value="{{task.storeCategory}}"></td>
+                <td><input type="text" name="updated_storeItem" id="storeItem" value="{{task.storeItem}}"></td>
+    
+                <td><input type="text" name="updated_myCategory" id="myCategory" value="{{task.myCategory}}"></td>
+                <td><input type="text" name="updated_myItem" id="myItem" value="{{task.myItem}}"></td>
+    
+                <td><input type="text" name="updated_price" id="price" value="{{task.price}}"></td>
+                <td><input type="date" name="updated_date" id="recepitDate" value="{{task.recepitDate.date()}}"></td>
+                
+                <td><input type="submit" value="Update" class="btn btn-info"></td>
+              </tr>
+          </form>
+      </table>
+    </div>
+
+
+{% endblock %}
+

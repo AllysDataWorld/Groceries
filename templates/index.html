@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+<p><h1 align="center">Groceries <br>Text Database</h1></p>
+
+<!--
+<p align="center"><a href="/delete_all_groceries/">DELETE ALL ROWS</a></p>
+-->
+
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+
+  
+      
+<div class="content">
+    {% if tasks|length < 1 %}
+    <h4 style="text-align: center">There are no tasks. Create one below!</h4>
+    {% else %}
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Store Name</th>
+            <th>Filename</th>            
+			<th>Receipt Text</th>
+			<th>Subtotal</th>
+            <th>Upload Date</th>                
+            <th>Actions</th>    
+        </tr>
+        {% for task in tasks %}
+            <tr>
+                <td>{{ task.id }}</td>
+                <td>{{ task.storeName }}</td>
+                <td>{{ task.filename }}</td>
+                <td>{{ task.receiptText }}</td>
+                <td>{{ task.subtotal }}</td>
+
+                <td>{{ task.upload_date.date() }}</td>
+                <td>
+                    <a href="/delete/{{task.id}}">Delete</a>
+                    <br>
+                    <a href="/update/{{task.id}}">Update</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+
+{% endblock %}

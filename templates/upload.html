@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<p><h1 align="center">Upload a New Receipt</h1></p>
+
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+
+</div>    
+    
+    <div class="form" align="left">
+    <form method="post" action="/upload/" enctype="multipart/form-data">
+        
+        <input type="file" name="file" class="form-control-file" autocomplete="off" required></br></br>
+        
+        <!--   
+            <label>Add Price</label> 
+   			<input type="text" name="price" class="form-control" ></br></br>    
+   		-->
+            <label>Add Store</label> 
+			<select class="form-control" name="store_name_options">
+			  <option>Metro</option>
+			  <option>Bulk Barn</option>
+			  <option>Food Basics</option>
+			</select>
+            </br></br>
+			
+			<label >(Optional) Add store name here if different from three options above.
+						If this is blank, the dropdown options will be used</label> 
+						
+			<input type="text" name="storeName" class="form-control">
+            </br></br>
+    		<input type="submit" value="upload" class="btn btn-info">
+		
+            </br></br>
+            <input type="date" name="recepitDate" id="recepitDate" value="">
+            </br></br>
+    </form>
+</div>
+
+
+{% endblock %}
+
+

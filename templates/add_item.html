@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+<p><h1 align="center">Add a New Item</h1></p>
+
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+    {% if filename %}
+        <div>
+            <img src="{{ url_for('display_image', filename=filename) }}">
+        </div>
+    {% endif %}
+    
+    
+<p>Example Values:</p>    
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Store Category</th>      
+      <th scope="col">Store Item</th>
+      <th scope="col">My Category</th>
+      <th scope="col">My Item</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">1</th>
+      <td>Grocery</td>      
+      <td>Kashi Go Lean</td>
+      <td>Kashi</td> 
+      <td>Cereal</td>           
+    </tr>
+    <tr>
+      <th scope="row">2</th>
+      <td>Produce</td>
+      <td>HASS AVOCADO</td>      
+      <td>bag of avocado</td>
+      <td>Veggie</td>      
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+<table>
+    <tr>
+    <div class="form" align="left">
+        <form action="/manual_add_receipt/" method="POST">
+            <td><label> Store Category </label></br><input type="text" name="manual_StoreCategory"></td>        
+            <td><label> Store Item</label></br><input type="text" name="manual_receiptitem" id="content"></td>
+            <td><label> My Category </label></br><input type="text" name="manual_my_category"></td>
+            <td><label> My Item</label></br><input type="text" name="manual_my_item"></td>
+            <tr>
+                <td><label>Store Name</label>
+    			<select class="form-control" name="manual_storeName">
+    			  <option>Metro</option>
+                  <option>Bulk Barn</option>
+    			  <option>Food Basics</option>
+    			</select></td>
+    			</br></br>
+                <td><label> Price</label></br><input type="text" name="manual_price"></td>
+            <td></td>
+            <td></td>
+
+            </tr>
+            <tr>
+            <td></br></br><input type="submit" class="btn btn-info" value="Add"></td>
+            </tr>    
+            
+        </form>
+    </div>
+    </tr>
+    
+</div>
+</table>
+
+
+
+{% endblock %}
