@@ -113,7 +113,9 @@ def bulk_insert():
     Grocery_TEMP_Items.query.delete()
     db.session.commit()
     
-    logger.info(f"Inserted {len(grocery_items)} items into Grocery_Items")
+    message = f"Inserted {len(grocery_items)} items into Grocery_Items"
+    logger.info(message)
+    print (message)
     flash(f"Successfully saved {len(grocery_items)} items")
     
     items = Grocery_Items.query.order_by(Grocery_Items.recepitDate.desc()).all()

@@ -4,19 +4,15 @@ import pandas as pd
 from code_helpers.levenshtein_distance import levenshtein_distance
 
 
-# metro_headings = ['GROCERY', 'PRODUCE', 'DAIRY', 'DELI','SEAFOOD', 'GENERAL','COMM']
-# subtotal_list = ['SUBTOTAL.' ,'SUBTOTAL', 'SUBTOT']
-# total_list = ['TOTAL.' ,'TOTAL', 'TOT']
-
-
-def create_metro_df(text_list, VERBOSE=True):
+def create_metro_df(text_list, VERBOSE):
+    
     import utils as uts
     from config import Config
     
     if VERBOSE:
-        CM_PRNSTMT = False
-    else:
         CM_PRNSTMT = True
+    else:
+        CM_PRNSTMT = False
 
     metro_headings = Config.METRO_CATEGORY
     subtotal_list = Config.SUBTOTALS

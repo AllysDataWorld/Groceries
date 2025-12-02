@@ -7,7 +7,6 @@ from datetime import datetime
 from database import db
 import utils as uts
 from app import app, logger
-import routes as rts
 from config import Config
 from models import Groceries, Grocery_Items, Grocery_TEMP_Items
 
@@ -242,36 +241,43 @@ def process_uploaded_file(file_path, store, filename, receipt_date):
         uts.add_temp_item(item_data)
     
     # Attempt to label items automatically
-    bought_once, frequent_items = guess_labels()
+    bought_once, frequent_items = guess_labels(Config.VERBOSE)
     return bought_once, frequent_items
 
 
-def guess_labels():
+def guess_labels(VERBOSE):
     """Guess labels for uploaded items based on purchase history."""
     bought_once = {}
     frequent_items = {}
     
     temp_items = Grocery_TEMP_Items.query.all()
-    logger.info(f"Processing {len(temp_items)} items for label guessing")
+    if VERBOSE:
+        message = f"Processing {len(temp_items)} items for label guessing"
+        print(message)
+        logger.info(message)
     
     for i, temp_item in enumerate(temp_items):
         clean_item = uts.clean_produce(temp_item.storeItem)
         if not clean_item:
             continue
         
-        logger.info(f"Processing item {i}: {clean_item}")
         matches = uts.find_store_item_matches(clean_item)
+        if VERBOSE:
+            message = f"Processing item {i}: {clean_item}"
+            print(message)
+            logger.info(message)        
+            
         
         if not matches:
-            logger.info("No matches found")
-            print("---> NOMATCH")
+            pass
+            
         elif len(matches) == 1:
             # Bought once before
             match = matches[0]
             temp_item.myItem = match.myItem
             temp_item.myCategory = match.myCategory
             bought_once[temp_item.myItem] = match.recepitDate.date()
-            print("---> 1 match --> committing")
+
             try:
                 db.session.commit()
             except Exception as e:

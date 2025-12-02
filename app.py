@@ -57,7 +57,6 @@ app.secret_key = secrets.token_hex(16)
 app.config['UPLOAD_FOLDER'] = Config.UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = Config.OUTPUT_FOLDER
 app.config['TEMP_FOLDER'] = Config.TEMP_FOLDER
-app.config['VERBOSE'] = Config.VERBOSE
 app.config['MAX_CONTENT_LENGTH'] = Config.MAX_CONTENT_LENGTH
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.DB_PATH
 

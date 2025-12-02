@@ -17,9 +17,6 @@ def text_mining_metro(text, metro_logger, VERBOSE):
         metro_logger.info("\nstart text_mining_metro:" + str(text))
         print("\nstart text_mining_metro:\n")
 
-    # metro_headings = ['GROCERY', 'PRODUCE', 'DAIRY', 'DELI','SEAFOOD', 'GENERAL','COMM.'] #'COMM. BAKERY'
-    # subtotal_list = ['SUBTOTAL.' ,'SUBTOTAL', 'SUBTOT']
-    # total_list = ['TOTAL.' ,'TOTAL', 'TOT']
     metro_headings = Config.METRO_CATEGORY
     subtotal_list = Config.SUBTOTALS
     total_list = Config.TOTALS
