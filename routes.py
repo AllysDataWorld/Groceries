@@ -448,3 +448,58 @@ def upload():
 
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     return render_template('Items_temp.html', filename=filename, tasks=temp_items)
+
+@app.route('/export_distinct_items/')
+def export_distinct_items():
+    """ MODULE written by Claud
+        Export distinct items from Grocery_Items to CSV."""
+    try:
+        # Get distinct myItem values
+        distinct_items = db.session.query(
+            Grocery_Items.myItem
+        ).distinct().order_by(Grocery_Items.myItem).all()
+        
+       # Get distinct combinations of all fields
+        distinct_items = db.session.query(
+            Grocery_Items.storeName,
+            Grocery_Items.storeCategory,
+            Grocery_Items.storeItem,
+            Grocery_Items.myItem,
+            Grocery_Items.myCategory
+        ).distinct().order_by(
+            Grocery_Items.storeName,
+            Grocery_Items.myCategory,
+            Grocery_Items.myItem
+        ).all() 
+        
+        # Create CSV filename with timestamp
+        #timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        #csv_filename = f'distinct_items_{timestamp}.csv'
+        csv_filename = "DistinctItems.csv"
+        csv_path = os.path.join(app.config['OUTPUT_FOLDER'], csv_filename)
+        
+        # Ensure output folder exists
+        os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
+        
+        # Write to CSV
+        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['storeName', 'storeCategory', 'storeItem', 'myItem', 'myCategory'])  # Header
+            for item in distinct_items:
+                # Only write rows where at least myItem has a value (or adjust condition as needed)
+                if item.myItem:  # Skip rows with null myItem
+                    writer.writerow([
+                        item.storeName,
+                        item.storeCategory,
+                        item.storeItem,
+                        item.myItem,
+                        item.myCategory
+                    ])
+        logger.info(f"Exported {len(distinct_items)} distinct items to {csv_filename}")
+        flash(f"Successfully exported {len(distinct_items)} distinct items to {csv_filename}")
+        return redirect('/delete_page/')
+        
+    except Exception as e:
+        logger.error(f"Error exporting distinct items: {e}")
+        flash(f"Error exporting items: {str(e)}")
+        return redirect('/delete_page/')
