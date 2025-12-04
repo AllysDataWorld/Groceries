@@ -77,7 +77,7 @@ def bulk_insert():
     total_price = uts.sum_price_list([item.price for item in temp_items])
     store_name = temp_items[0].storeName
 
-    temp_ocr = os.path.join(app.config['TEMP_FOLDER'], 'OCR_text.csv')
+    temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
     with open(temp_ocr, 'r') as f:
         raw_text = f.read()
     
@@ -89,6 +89,7 @@ def bulk_insert():
     with open(output_ai, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(send_to_ai)
+            
     
     # Bulk insert items
     grocery_items = []
@@ -209,8 +210,11 @@ def manual_add_receipt():
     
 #     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
 #     return render_template('Items_temp.html', filename=uts.get_filename(), tasks=temp_items)
-
+    
+    
+########################################################
 # Delete routes
+########################################################
 @app.route('/delete_all/')
 def delete_all():
     """Delete all data from all tables."""
@@ -271,14 +275,35 @@ def delete_temp_item(id):
     except Exception as e:
         db.session.rollback()
         return 'Error deleting temp item:',e
-
+    
+    
+########################################################
 # Update routes
+########################################################
 @app.route('/update/<int:id>/', methods=['GET', 'POST'])
 def update_receipt(id):
     """Update a receipt."""
     receipt = Groceries.query.get_or_404(id)
     
-    if request.method == 'POST':
+    if request.method == 'POST':   
+        
+        updated = os.path.join(app.config['OUTPUT_FOLDER'], 'Updated_Rows.csv')
+        with open(updated, 'a', newline='') as csvfile:
+                updatewriter = csv.writer(csvfile)
+                updatewriter.writerow("")
+                updatewriter.writerow(["ROUTE: /update/"])
+        
+                updatewriter.writerow(["Update Groceries ORIG ROW", 
+                    receipt.storeName,
+                    receipt.receiptText,
+                    receipt.filename,
+                    receipt.subtotal ])
+                updatewriter.writerow(["Update Groceries UPDATED ROW", 
+                    request.form['updated_storeName'],
+                    request.form['updated_receiptText'],
+                    request.form['updated_filename'],
+                    uts.convert_price(request.form['updated_price'])])        
+        
         receipt.storeName = request.form['updated_storeName']
         receipt.receiptText = request.form['updated_receiptText']
         receipt.filename = request.form['updated_filename']
@@ -288,6 +313,7 @@ def update_receipt(id):
         if receipt.upload_date.date() > new_date:
             receipt.upload_date = new_date
         
+
         try:
             db.session.commit()
             return redirect('/')
@@ -304,6 +330,28 @@ def update_items_route(id):
     item = Grocery_Items.query.get_or_404(id)
     
     if request.method == 'POST':
+        
+        updated = os.path.join(app.config['OUTPUT_FOLDER'], 'Updated_Rows.csv')
+        with open(updated, 'a', newline='') as csvfile:
+                updatewriter = csv.writer(csvfile)
+                updatewriter.writerow("")
+                updatewriter.writerow(["ROUTE: /update_items/"])
+        
+                updatewriter.writerow(["Update GroceriesITEMS ORIG ROW", 
+                    item.storeName,
+                    item.storeCategory,
+                    item.storeItem,
+                    item.myCategory,
+                    item.myItem,
+                    item.price
+                    ])
+                updatewriter.writerow(["Update GroceriesITEMS UPDATED ROW", 
+                    request.form['updated_storeName'],
+                    request.form['updated_storeItem'],
+                    request.form['updated_myCategory'],
+                    request.form['updated_myItem'],
+                    uts.convert_price(request.form['updated_price'])])          
+
         item.storeName = request.form['updated_storeName']
         item.storeCategory = request.form['updated_storeCategory']
         item.storeItem = request.form['updated_storeItem']
@@ -331,6 +379,28 @@ def update_temp_item_route(id):
     item = Grocery_TEMP_Items.query.get_or_404(id)
     
     if request.method == 'POST':
+        
+        updated = os.path.join(app.config['OUTPUT_FOLDER'], 'Updated_Rows.csv')
+        with open(updated, 'a', newline='') as csvfile:
+                updatewriter = csv.writer(csvfile)
+                updatewriter.writerow("")
+                updatewriter.writerow(["ROUTE: /update_items_temp_db/"])
+        
+                updatewriter.writerow(["Update GroceriesITEMS ORIG ROW", 
+                    item.storeName,
+                    item.storeCategory,
+                    item.storeItem,
+                    item.myCategory,
+                    item.myItem,
+                    item.price
+                    ])
+                updatewriter.writerow(["Update GroceriesITEMS UPDATED ROW", 
+                    request.form['updated_storeName'],
+                    request.form['updated_storeItem'],
+                    request.form['updated_myCategory'],
+                    request.form['updated_myItem'],
+                    uts.convert_price(request.form['updated_price'])])           
+
         item.storeName = request.form['updated_storeName']
         item.storeCategory = request.form['updated_storeCategory']
         item.storeItem = request.form['updated_storeItem']
@@ -400,6 +470,64 @@ def check_last_upload():
         flash("You must delete or save the existing rows first")
         return redirect('/last_upload/')
 
+
+@app.route('/export_distinct_items/')
+def export_distinct_items():
+    """ MODULE written by Claud
+        Export distinct items from Grocery_Items to CSV."""
+    try:
+      
+       # Get distinct combinations of all fields
+        distinct_items = db.session.query(
+            Grocery_Items.storeName,
+            Grocery_Items.storeCategory,
+            Grocery_Items.storeItem,
+            Grocery_Items.myItem,
+            Grocery_Items.myCategory
+        ).distinct().order_by(
+            Grocery_Items.storeName,
+            Grocery_Items.myCategory,
+            Grocery_Items.myItem
+        ).all() 
+        
+        # Create CSV filename with timestamp
+        #timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        #csv_filename = f'distinct_items_{timestamp}.csv'
+        csv_filename = "Distinct_Grocery_Items.csv"
+        csv_path = os.path.join(app.config['OUTPUT_FOLDER'], csv_filename)
+        
+        # Ensure output folder exists
+        os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
+        
+        # Write to CSV
+        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['storeName', 'storeCategory', 'storeItem', 'myItem', 'myCategory'])  # Header
+            for item in distinct_items:
+                # Only write rows where at least myItem has a value (or adjust condition as needed)
+                if item.myItem:  # Skip rows with null myItem
+                    writer.writerow([
+                        item.storeName,
+                        item.storeCategory,
+                        item.storeItem,
+                        item.myItem,
+                        item.myCategory
+                    ])
+        logger.info(f"Exported {len(distinct_items)} distinct items to {csv_filename}")
+        flash(f"Successfully exported {len(distinct_items)} distinct items to {csv_filename}")
+        return redirect('/delete_page/')
+        
+    except Exception as e:
+        logger.error(f"Error exporting distinct items: {e}")
+        flash(f"Error exporting items: {str(e)}")
+        return redirect('/delete_page/')
+    
+
+    
+########################################################
+# UPLOAD routes
+########################################################
+
 @app.route('/upload/', methods=['GET', 'POST'])
 def upload():
     """Handle file upload and processing."""
@@ -446,60 +574,7 @@ def upload():
         for count, item in frequent_items.items():
             flash(f"{item} bought {count} times before")
 
+    #uts.uploaded_items_to_ai()
+    
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     return render_template('Items_temp.html', filename=filename, tasks=temp_items)
-
-@app.route('/export_distinct_items/')
-def export_distinct_items():
-    """ MODULE written by Claud
-        Export distinct items from Grocery_Items to CSV."""
-    try:
-        # Get distinct myItem values
-        distinct_items = db.session.query(
-            Grocery_Items.myItem
-        ).distinct().order_by(Grocery_Items.myItem).all()
-        
-       # Get distinct combinations of all fields
-        distinct_items = db.session.query(
-            Grocery_Items.storeName,
-            Grocery_Items.storeCategory,
-            Grocery_Items.storeItem,
-            Grocery_Items.myItem,
-            Grocery_Items.myCategory
-        ).distinct().order_by(
-            Grocery_Items.storeName,
-            Grocery_Items.myCategory,
-            Grocery_Items.myItem
-        ).all() 
-        
-        # Create CSV filename with timestamp
-        #timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        #csv_filename = f'distinct_items_{timestamp}.csv'
-        csv_filename = "DistinctItems.csv"
-        csv_path = os.path.join(app.config['OUTPUT_FOLDER'], csv_filename)
-        
-        # Ensure output folder exists
-        os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
-        
-        # Write to CSV
-        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(['storeName', 'storeCategory', 'storeItem', 'myItem', 'myCategory'])  # Header
-            for item in distinct_items:
-                # Only write rows where at least myItem has a value (or adjust condition as needed)
-                if item.myItem:  # Skip rows with null myItem
-                    writer.writerow([
-                        item.storeName,
-                        item.storeCategory,
-                        item.storeItem,
-                        item.myItem,
-                        item.myCategory
-                    ])
-        logger.info(f"Exported {len(distinct_items)} distinct items to {csv_filename}")
-        flash(f"Successfully exported {len(distinct_items)} distinct items to {csv_filename}")
-        return redirect('/delete_page/')
-        
-    except Exception as e:
-        logger.error(f"Error exporting distinct items: {e}")
-        flash(f"Error exporting items: {str(e)}")
-        return redirect('/delete_page/')
