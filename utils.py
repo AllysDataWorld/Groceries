@@ -54,13 +54,33 @@ def get_filename():
     """Get filename from OCR_text.csv."""
     from app import app
     try:
-        temp_ocr = os.path.join(app.config['TEMP_FOLDER'], 'OCR_text.csv')
+        temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
         with open(temp_ocr, 'r') as fin:
             content = fin.read()
-            filename = content.split(',')[1] if ',' in content else "get_filename() FAILED: Can't Open File"
+            filename = content.split(',')[1]
         return filename if filename else "get_filename() FAILED"
     except FileNotFoundError:
         return "get_filename() File Note Found"
+
+
+def get_upload_date():
+    """Get date of upload from OCR_text.csv."""
+    from app import app
+    try:
+        temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
+        with open(temp_ocr, 'r') as fin:
+            content = fin.read()
+            upload_date = content.split(',')[0].split(' ')[0]
+        return upload_date if upload_date else "get_upload_date() FAILED"
+    except FileNotFoundError:
+        return "get_upload_date() File Note Found"
+
+def get_upload_items():
+    temp = os.path.join(app.config['OUTPUT_FOLDER'], 'send_to_ai.csv')
+    with open(temp, 'r') as fin:
+        list_of_items = fin.read().splitlines()
+    upload_date = get_upload_date()
+    return list_of_items, upload_date
 
 
 
@@ -154,7 +174,6 @@ def find_store_item_matches(item):
 def get_unlabeled_items():
     """Get items from temp table that need labeling."""
     from database import db
-    from app import logger
     
     return db.session.execute(
         select(Grocery_TEMP_Items).where(
@@ -168,7 +187,6 @@ def get_unlabeled_items():
 def get_unpopulated_items():
     """Get items with missing required fields."""
     from database import db
-    from app import logger
     
     return db.session.execute(
         select(Grocery_TEMP_Items).where(
@@ -221,10 +239,10 @@ def process_uploaded_file(file_path, store, filename, receipt_date):
     db.session.commit()
     
 
-    temp_ocr = os.path.join(app.config['TEMP_FOLDER'], 'OCR_text.csv')
+    temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
     with open(temp_ocr, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow([datetime.today().date(), filename, store, raw_text])
+        writer.writerow([receipt_date, filename, store, raw_text])
     
     # Add items to temp table
     for item in new_rows:
@@ -297,3 +315,50 @@ def guess_labels(VERBOSE):
                 logger.error(f"Error updating item: {e}")
 
     return bought_once, frequent_items
+
+
+def uploaded_items_to_ai():
+    """ DELETE THIS LATER? NOT USED
+        Export distinct items from Grocery_Items_TEMP to CSV."""
+    try:
+        
+       # Get distinct combinations of all fields
+        distinct_items = db.session.query(
+            Grocery_TEMP_Items.storeName,
+            Grocery_TEMP_Items.storeCategory,
+            Grocery_TEMP_Items.storeItem,
+            Grocery_TEMP_Items.myItem,
+            Grocery_TEMP_Items.myCategory
+        ).distinct().order_by(
+            Grocery_TEMP_Items.storeName,
+            Grocery_TEMP_Items.myCategory,
+            Grocery_TEMP_Items.myItem
+        ).all() 
+        
+        # Create CSV filename 
+        csv_filename = "Uploaded_Items.csv"
+        csv_path = os.path.join(app.config['OUTPUT_FOLDER'], csv_filename)
+        
+        # Ensure output folder exists
+        os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
+        
+        # Write to CSV
+        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['storeName', 'storeCategory', 'storeItem', 'myItem', 'myCategory'])  # Header
+            for item in distinct_items:
+                # Only write rows where at least myItem has a value (or adjust condition as needed)
+                if item.myItem:  # Skip rows with null myItem
+                    writer.writerow([
+                        item.storeName,
+                        item.storeCategory,
+                        item.storeItem,
+                        item.myItem,
+                        item.myCategory
+                    ])
+
+    except Exception as e:
+        logger.error(f"Error uploaded_items_to_ai: {e}")
+        print(f"Error uploaded_items_to_ai: {e}")
+    return None
+
