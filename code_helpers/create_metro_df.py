@@ -169,11 +169,13 @@ def create_metro_df(text_list, VERBOSE):
 
 #########################################################################
 
+        
 #USED THE WEBSITE TO UPLOAD. THEN DELETE THE UPLOADED ROWS.
 #UPLOADING CREATES A TEMP CSV FILE THAT HAS THE RAW OCR OUTPUT AS A CSV FILE
-# FILE = 'OCR_text_DATRY.csv'
-# FILE = "OCR_text_Metro_8_ORIG.csv"
-# FILE = 'metro_5_GPD_15.63.csv'
+
+# PATH = r"C:\Users\after\OneDrive\Desktop\code_from_HD\Groceries\Groceries\FLASK\final_versions\v12_newenv\output"
+# FILE = PATH + r'\OCR_text.csv'
+# text_list = TEST_CONVERT_CSV_TO_df(FILE)
 
 # def TEST_CONVERT_CSV_TO_df(FILE):
 #     all_text = open(FILE).readlines()
@@ -184,10 +186,12 @@ def create_metro_df(text_list, VERBOSE):
 #         else:
 #             text = text.split('\n')[0]
 #             text_list.append(text)
+#     return text_list
+
 #     df_receipt, df_cln, df_lev = create_metro_df(text_list)
 #     df_cln.to_csv("df_cln.csv", index=0)
 #     df_receipt.to_csv("df_flags.csv", index=0)
-#     return df_receipt, df_cln, df_lev
+
  
  
 #TESTING: UPLOAD a recept using GUI: this will create the OCR_text.csv

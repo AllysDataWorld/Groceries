@@ -4,37 +4,23 @@
 # pip install pytesseract flask_sqlalchemy flask_migrate opencv-python
 
 
-import pytz
-import sqlite3
-import secrets
-import logging
-from dateutil.relativedelta import relativedelta
-from werkzeug.utils import secure_filename
-from pytesseract import pytesseract
 
-import os
-import csv
-import re
 import secrets
 import logging
-from datetime import datetime
+from pytesseract import pytesseract
 
 from config import Config
 from database import db
 
-from flask import Flask, render_template, url_for, request, redirect, flash, jsonify
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask
+
 from flask_migrate import Migrate
 import sqlalchemy as sa
-from sqlalchemy import or_, select
+
 from sqlalchemy.orm import Session, sessionmaker
 
 # Custom imports
-from code_helpers.parse_process_df import parse_process_df
-from code_helpers.text_mining_metro import text_mining_metro
-from code_helpers.OCR_metro import OCR_metro
-from code_helpers.levenshtein_distance import levenshtein_distance
-from code_helpers.create_metro_df import create_metro_df
+
 
 
 log_file = 'logs/log.log'

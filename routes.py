@@ -218,7 +218,6 @@ def manual_add_receipt():
 ########################################################
 # Delete routes
 ########################################################
-<<<<<<< HEAD
 
 @app.route('/delete_multiple_items_TempDB/', methods=['POST'])
 def delete_multiple_items_TempDB():
@@ -251,9 +250,6 @@ def delete_multiple_items_TempDB():
     
     return last_upload()
 
-
-=======
->>>>>>> 8537d3a1c2150dbe399159fdf3b2ddeb4c002f4b
 @app.route('/delete_all/')
 def delete_all():
     """Delete all data from all tables."""

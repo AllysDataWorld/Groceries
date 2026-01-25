@@ -182,18 +182,18 @@ def parse_process_df_bulk(text_list, log):
 # USED THE WEBSITE TO UPLOAD a receipt THEN DELETE THE UPLOADED ROWS.
 # UPLOADING CREATES A TEMP CSV FILE THAT HAS THE RAW OCR OUTPUT AS A CSV FILE
 
-def TEST_process(FILE, lg):
-    all_text = open(FILE).readlines()
-    text_list = []
-    for text in all_text:
-        if text == "\n":
-            pass
-        else:
-            text = text.split('\n')[0]
-            text_list.append(text)
+# def TEST_process(FILE, lg):
+#     all_text = open(FILE).readlines()
+#     text_list = []
+#     for text in all_text:
+#         if text == "\n":
+#             pass
+#         else:
+#             text = text.split('\n')[0]
+#             text_list.append(text)
             
     #new_rows, total = parse_process_df_bulk(text_list, lg)
-    return text_list
+    # return text_list
     
 # from ai import logger as lg
 # import create_metro_df as CM
