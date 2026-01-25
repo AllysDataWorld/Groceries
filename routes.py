@@ -74,8 +74,6 @@ def save_grocery_item():
   
     grocery_items = uts.bulk_add_grocery_item(temp_items)
     
-<<<<<<< HEAD
-=======
     # Calculate totals and create main receipt record
     total_price = uts.sum_price_list([item.price for item in temp_items])
     store_name = temp_items[0].storeName
@@ -117,7 +115,6 @@ def save_grocery_item():
     Grocery_TEMP_Items.query.delete()
     db.session.commit()
     
->>>>>>> 8537d3a1c2150dbe399159fdf3b2ddeb4c002f4b
     message = f"Inserted {len(grocery_items)} items into Grocery_Items"
     logger.info(message)
     print (message)
