@@ -2,11 +2,13 @@
 
 {% block header %}
     <script>
-        function goToBulkInsert() {
-            window.location.href = "/bulk_insert/";
+        let lastCheckedIndex = null;
+        
+        function save_item() {
+            window.location.href = "/save_grocery_item/";
         }
         
-        function deleteTemp() {
+        function delete_n_upload() {
             window.location.href = "/delete_all_Grocery_TEMP_Items/";
         }    
 
@@ -20,7 +22,60 @@
         
         function updateDate() {
             window.location.href = "/update_date/";
-        }                
+        }
+        
+        function deleteSelected() { /*deleteSelected code was written by Claud AI*/
+            const checkboxes = document.querySelectorAll('input[name="item_ids"]:checked');
+            if (checkboxes.length === 0) {
+                alert('Please select at least one item to delete');
+                return;
+            }
+            
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+            const confirmation = confirm(`Are you sure you want to delete ${ids.length} item(s)?`);
+            
+            if (confirmation) {
+                // Create a form and submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/delete_multiple_items_TempDB/';
+                
+                ids.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'item_ids';
+                    input.value = id;
+                    form.appendChild(input);
+                });
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        function toggleAll(source) {
+            const checkboxes = document.querySelectorAll('input[name="item_ids"]');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+            lastCheckedIndex = null;
+        }
+        
+        function handleCheckboxClick(event, currentIndex) {
+            const checkboxes = document.querySelectorAll('input[name="item_ids"]');
+            
+            if (event.shiftKey && lastCheckedIndex !== null) {
+                // Determine range
+                const start = Math.min(lastCheckedIndex, currentIndex);
+                const end = Math.max(lastCheckedIndex, currentIndex);
+                
+                // Check all checkboxes in range
+                const isChecked = checkboxes[currentIndex].checked;
+                for (let i = start; i <= end; i++) {
+                    checkboxes[i].checked = isChecked;
+                }
+            }
+            
+            lastCheckedIndex = currentIndex;
+        }
     </script>
 {% endblock %}
 
@@ -30,8 +85,8 @@
     <div class="content">
         {% if tasks|length > 0 %}		
         <div class="container" align="center">
-            <button class="nice-button" onclick="goToBulkInsert()">Save All Items!</button>
-            <button class="nice-button_red" onclick="deleteTemp()">Delete and ReUpload!</button>
+            <button class="nice-button-green" onclick="save_item()">Save All Items!</button>
+            <button class="nice-button_red" onclick="delete_n_upload()">Delete and ReUpload!</button>
         </div>
         {% else %}
         <div class="container" align="center">
@@ -75,11 +130,13 @@
         {% else %}
         
         <div class="container" align="center">
-            <button class="nice-button_blue" onclick="guessLabelForNewItems()">Guess for New Items!</button>
+            <button class="nice-button_lightgreen" onclick="guessLabelForNewItems()">Guess for New Items!</button>
+            <button class="nice-button_lightred" onclick="deleteSelected()">Delete Selected</button>
         </div>
 
         <table>
             <tr>
+                <th><input type="checkbox" onclick="toggleAll(this)" title="Select All"></th>
                 <th>ID</th>  
                 <th>Filename</th>        
                 <th>Store Name</th>
@@ -94,6 +151,7 @@
             </tr>
             {% for task in tasks %}
                 <tr>
+                    <td><input type="checkbox" name="item_ids" value="{{task.id}}" onclick="handleCheckboxClick(event, {{loop.index0}})"></td>
                     <th>{{task.id}}</th>
                     <th>{{task.filename}}</th>            
                     <td>{{ task.storeName }}</td>

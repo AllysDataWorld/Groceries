@@ -1,5 +1,7 @@
-
-.nice-button {
+/*********************************************************************/
+/* Used in Items_temp.HTML >>   goToBulkInsert() --> Save All Items! */
+/********************************************************************/
+.nice-button-green {
     background-color: #4CAF50; /* Green background */
     border: none; /* Remove borders */
     color: white; /* White text */
@@ -13,14 +15,15 @@
     border-radius: 12px; /* Rounded corners */
     transition: background-color 0.3s; /* Smooth transition */
 }
-
-.nice-button:hover {
-    background-color: #45a049; /* Darker green on hover */
+.nice-button-green:hover {
+    background-color: #45a049; /* same on hover */
 }
 
-
+/************************************************************************/
+/* Used in Items_temp.HTML >>  "deleteTemp()" --> Delete and ReUpload! */
+/***********************************************************************/
 .nice-button_red {
-    background-color: #eb401b; /* Green background */
+    background-color: #eb401b; /* Red-orange background */
     border: none; /* Remove borders */
     color: white; /* White text */
     padding: 15px 32px; /* Some padding */
@@ -33,14 +36,16 @@
     border-radius: 12px; /* Rounded corners */
     transition: background-color 0.3s; /* Smooth transition */
 }
-
 .nice-button_red:hover {
-    background-color: #84220d; /* Darker green on hover */
+    background-color: #84220d; /*darker on hover */
 }
 
 
-.nice-button_blue {
-    background-color: #14bfe4; /* Green background */
+/********************************************************************************/
+/* Used in Items_temp.HTML >> "guessLabelForNewItems()" --->Guess for New Items */
+/********************************************************************************/
+.nice-button_lightgreen {
+    background-color: #34cf5b; /* LightGreen background */
     border: none; /* Remove borders */
     color: white; /* White text */
     padding: 15px 32px; /* Some padding */
@@ -53,7 +58,28 @@
     border-radius: 12px; /* Rounded corners */
     transition: background-color 0.3s; /* Smooth transition */
 }
-
-.nice-button_blue:hover {
-    background-color: #1457e4; /* Darker green on hover */
+.nice-button_lightgreen:hover {
+    background-color: #2AD13F; /* darker on hover */
 }
+
+
+/***********************************************************************/
+/* Used in Items_temp.HTML >> "deleteSelected() ---> Delete Selected  */
+/***********************************************************************/
+.nice-button_lightred {
+    background-color: #ff9999; /* Pastel LightRed */; /*Light Red background */
+    border: none; /* Remove borders */
+    color: white; /* White text */
+    padding: 15px 32px; /* Some padding */
+    text-align: center; /* Centered text */
+    text-decoration: none; /* Remove underline */
+    display: inline-block; /* Make the button inline */
+    font-size: 16px; /* Increase font size */
+    margin: 4px 2px; /* Some margin */
+    cursor: pointer; /* Pointer/hand icon */
+    border-radius: 12px; /* Rounded corners */
+    transition: background-color 0.3s; /* Smooth transition */
+}
+.nice-button_lightred:hover {
+    background-color: #ff6b6b; /* darker on hover */
+}; 

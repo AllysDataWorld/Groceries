@@ -2,7 +2,7 @@ import os
 import re
 import pytz
 import csv
-from datetime import datetime
+from datetime import datetime, date
 
 from database import db
 import utils as uts
@@ -35,6 +35,8 @@ def convert_date(date_input):
     if not date_input:
         return get_toronto_time()
     elif isinstance(date_input, datetime):
+        return date_input
+    elif isinstance(date_input, date):
         return date_input
     else:
         return datetime.strptime(date_input, '%Y-%m-%d').date()
@@ -165,6 +167,52 @@ def add_grocery_item(item_data):
         db.session.rollback()
         logger.error(f"FAIL: Grocery item not added: {e}")
 
+
+def bulk_add_grocery_item(temp_items):
+    # Calculate totals and create main receipt record
+    total_price = uts.sum_price_list([item.price for item in temp_items])
+    store_name = temp_items[0].storeName
+
+    temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
+    with open(temp_ocr, 'r') as f:
+        raw_text = f.read()
+    
+    receipt_id = uts.add_raw_receipt(raw_text, store_name, total_price, uts.get_filename())
+       
+    send_to_ai = [temp_item.myItem for temp_item in temp_items]
+    output_ai = os.path.join(app.config['OUTPUT_FOLDER'], 'send_to_ai.csv')
+    with open(output_ai, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(send_to_ai)
+    
+    grocery_items = []
+    for temp_item in temp_items:
+        item_data = {
+            'storeItem': temp_item.storeItem,
+            'myCategory': temp_item.myCategory,
+            'storeCategory': temp_item.storeCategory,
+            'myItem': temp_item.myItem,
+            'storeName': temp_item.storeName,
+            'price': temp_item.price,
+            'filename': temp_item.filename,
+            'recepitDate': temp_item.recepitDate,
+            'groceries_id': receipt_id
+        }
+        grocery_items.append(Grocery_Items(**item_data))
+    
+    db.session.bulk_save_objects(grocery_items)
+    db.session.commit()
+    
+    # Clear temp table
+    Grocery_TEMP_Items.query.delete()
+    db.session.commit()
+    return grocery_items
+
+
+
+
+  
+  
 def find_store_item_matches(item):
     """Find matching items in Grocery_Items table."""
     return Grocery_Items.query.filter(

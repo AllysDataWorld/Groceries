@@ -88,7 +88,7 @@ def parse_process_df(text_list, log, VERBOSE):
 
         for i, cost in enumerate(produce_df.produce_cost):
             if cost==1:
-                cost_str = produce_df.iloc[i,-1]
+                #cost_str = produce_df.iloc[i,-1]
                 item_str = produce_df.iloc[i-1,-1]
                 price = produce_df.iloc[i,price_idx]
                 item = item_str# + " " + cost_str
@@ -118,7 +118,7 @@ def parse_process_df(text_list, log, VERBOSE):
             category= row['CAT_MATCH']
         else:
             insert_row.append((category, row['item'], row['price']))
-            print("insert_row:", category, row['item'] ,"------->", row['price'])
+            if PPDF_PRNSTMT: print("THIS?insert_row:", category, row['item'] ,"------->", row['price'])
             log.info("insert_row:" + str(category) + str(row['item']) +"------->"+ str(row['price']))
 
 

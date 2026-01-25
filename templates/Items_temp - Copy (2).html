@@ -17,13 +17,74 @@
         function lastUpload() {
             window.location.href = "/last_upload/";
         }        
-                 
+        
+        function updateDate() {
+            window.location.href = "/update_date/";
+        }
+        
+        function deleteSelected() {
+            const checkboxes = document.querySelectorAll('input[name="item_ids"]:checked');
+            if (checkboxes.length === 0) {
+                alert('Please select at least one item to delete');
+                return;
+            }
+            
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+            const confirmation = confirm(`Are you sure you want to delete ${ids.length} item(s)?`);
+            
+            if (confirmation) {
+                // Create a form and submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/delete_multiple_items_TempDB/';
+                
+                ids.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'item_ids';
+                    input.value = id;
+                    form.appendChild(input);
+                });
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        function toggleAll(source) {
+            const checkboxes = document.querySelectorAll('input[name="item_ids"]');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+        }
     </script>
 {% endblock %}
 
 {% block body %}
+    <p><h1 align="center">TEMP<br>Items Database</h1></p>
 
-<p><h1 align="center">TEMP<br>Items Database</h1></p>
+    <div class="content">
+        {% if tasks|length > 0 %}		
+        <div class="container" align="center">
+            <button class="nice-button" onclick="goToBulkInsert()">Save All Items!</button>
+            <button class="nice-button_red" onclick="deleteTemp()">Delete Receipt and ReUpload!</button>
+            <button class="nice-button_red" onclick="deleteSelected()">Delete Selected Item</button>
+        </div>
+        {% else %}
+        <div class="container" align="center">
+            <button class="nice-button" onclick="window.location.href='/upload/'">Upload New Receipt</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <div class="row">
+            {% if filename %}
+                <div>
+                    <img src="{{ url_for('display_image', filename=filename) }}" width="500" height="600">
+                    <br><br>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 
     <div class="container">
         <div class="row">
@@ -43,45 +104,6 @@
         </div>
     </div>
 
-<TABLE>
-  <tr>
-    <th>Receipt Uploaded </th>
-    <th>Receipt Items</th> 
-  </tr>
-  <tr>
-    <td>
-    
-    <div class="content">
-        {% if tasks|length > 0 %}		
-        <div class="container" align="center">
-            <button class="nice-button" onclick="goToBulkInsert()">Save All Items!</button>
-            <button class="nice-button_red" onclick="deleteTemp()">Delete and ReUpload!</button>
-        </div>
-        {% else %}
-        <div class="container" align="center">
-            <button class="nice-button" onclick="window.location.href='/upload/'">Upload New Receipt</button>
-        </div>
-        {% endif %}
-        
-        <div class="container">
-            <div class="row">
-                {% if filename %}
-                    <div>
-                        <img src="{{ url_for('display_image', filename=filename) }}" width="500" height="600">
-                        <br><br>
-                    </div>
-                {% endif %}
-            </div>
-        </div>        
-            
-        
-    </div>    
-    
-    
-    
-    </td>
-    <td>
-    
     <div class="content">
         {% if tasks|length < 1 %}
         <h4 style="text-align: center">There are no uploaded receipts. Upload a new receipt!</h4>
@@ -93,6 +115,7 @@
 
         <table>
             <tr>
+                <th><input type="checkbox" onclick="toggleAll(this)" title="Select All"></th>
                 <th>ID</th>  
                 <th>Filename</th>        
                 <th>Store Name</th>
@@ -107,6 +130,7 @@
             </tr>
             {% for task in tasks %}
                 <tr>
+                    <td><input type="checkbox" name="item_ids" value="{{task.id}}"></td>
                     <th>{{task.id}}</th>
                     <th>{{task.filename}}</th>            
                     <td>{{ task.storeName }}</td>
@@ -127,17 +151,7 @@
         </table>
 
         {% endif %}
-    </div>    
-    
-    </td>
-  </tr>
-</TABLE>
-
-
-
-
-
-
+    </div>
 
     <br>
     <hr>

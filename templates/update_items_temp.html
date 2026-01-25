@@ -2,15 +2,28 @@
 
 
 {% block body %}
-<div class="content">
-    <h1 style="text-align: center">Update Temp Items</h1>
+<p><h1 align="center">Update <br> Items </h1></p>
 
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
 
-        </form>
-    </div>
-</div>
-
-
+    {% if filename %}
+        <div>
+            <img src="{{ url_for('display_image', filename=filename) }}", width="500" height="600">
+            <br><br>
+        </div>
+    {% endif %}
    
     <div class="form-group">
 

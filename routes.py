@@ -1,8 +1,8 @@
 import csv
 import os
-from datetime import datetime
+#from datetime import datetime
 
-from app import app, logger, session
+from app import app, logger
 from models import Groceries, Grocery_Items, Grocery_TEMP_Items
 import utils as uts
 from database import db
@@ -11,7 +11,6 @@ from flask import render_template, url_for, request, redirect, flash, jsonify
 from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 from code_helpers.levenshtein_distance import levenshtein_distance
-
 
 @app.route('/guess_label_for_new_items/')
 def guess_label_for_new_items():
@@ -54,65 +53,26 @@ def guess_label_for_new_items():
         for original, matched in new_matches.items():
             flash(f"{original} → {matched}")
     
-    filename = uts.get_filename() if new_matches else ''
+    filename = uts.get_filename() 
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     return render_template('Items_temp.html', filename=filename, tasks=temp_items)
 
-@app.route('/bulk_insert/')
-def bulk_insert():
+@app.route('/save_grocery_item/')
+def save_grocery_item():
     """Save all temp items to main database."""
     unpopulated = uts.get_unpopulated_items()
     if unpopulated:
         flash("Please complete all required fields before saving:")
-        for i, item in enumerate(unpopulated):
-            flash(f"Row {i+1}: Missing required information")
+        for  item in (unpopulated):
+            flash(f"> My_Label or My_Category is missing: {item.storeItem}")
         return redirect('/last_upload/')
     
     temp_items = Grocery_TEMP_Items.query.all()
     if not temp_items:
         flash("No items to save")
         return redirect('/upload/')
-    
-    # Calculate totals and create main receipt record
-    total_price = uts.sum_price_list([item.price for item in temp_items])
-    store_name = temp_items[0].storeName
-
-    temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
-    with open(temp_ocr, 'r') as f:
-        raw_text = f.read()
-    
-    receipt_id = uts.add_raw_receipt(raw_text, store_name, total_price, uts.get_filename())
-       
-
-    send_to_ai = [temp_item.myItem for temp_item in temp_items]
-    output_ai = os.path.join(app.config['OUTPUT_FOLDER'], 'send_to_ai.csv')
-    with open(output_ai, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(send_to_ai)
-            
-    
-    # Bulk insert items
-    grocery_items = []
-    for temp_item in temp_items:
-        item_data = {
-            'storeItem': temp_item.storeItem,
-            'myCategory': temp_item.myCategory,
-            'storeCategory': temp_item.storeCategory,
-            'myItem': temp_item.myItem,
-            'storeName': temp_item.storeName,
-            'price': temp_item.price,
-            'filename': temp_item.filename,
-            'recepitDate': temp_item.recepitDate,
-            'groceries_id': receipt_id
-        }
-        grocery_items.append(Grocery_Items(**item_data))
-    
-    db.session.bulk_save_objects(grocery_items)
-    db.session.commit()
-    
-    # Clear temp table
-    Grocery_TEMP_Items.query.delete()
-    db.session.commit()
+  
+    grocery_items = uts.bulk_add_grocery_item(temp_items)
     
     message = f"Inserted {len(grocery_items)} items into Grocery_Items"
     logger.info(message)
@@ -121,6 +81,8 @@ def bulk_insert():
     
     items = Grocery_Items.query.order_by(Grocery_Items.recepitDate.desc()).all()
     return render_template('items.html', tasks=items)
+
+
 
 # Routes - Search
 @app.route('/search/')
@@ -215,6 +177,39 @@ def manual_add_receipt():
 ########################################################
 # Delete routes
 ########################################################
+
+@app.route('/delete_multiple_items_TempDB/', methods=['POST'])
+def delete_multiple_items_TempDB():
+    """Delete multiple temp items from the database."""
+    item_ids = request.form.getlist('item_ids')
+    
+    if not item_ids:
+        flash('No items selected for deletion', 'warning')
+        return redirect('/items_temp/')
+    
+    try:
+        # Convert IDs to integers and delete each item
+        deleted_count = 0
+        for item_id in item_ids:
+            item = Grocery_TEMP_Items.query.get(int(item_id))
+            if item:
+                db.session.delete(item)
+                deleted_count += 1
+        
+        # Commit all deletions at once
+        db.session.commit()
+        flash(f'Successfully deleted {deleted_count} item(s)', 'success')
+        
+    except ValueError:
+        db.session.rollback()
+        flash('Invalid item ID format', 'error')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting items: {str(e)}', 'error')
+    
+    return last_upload()
+
+
 @app.route('/delete_all/')
 def delete_all():
     """Delete all data from all tables."""
@@ -377,6 +372,7 @@ def update_items_route(id):
 def update_temp_item_route(id):
     """Update a temporary item."""
     item = Grocery_TEMP_Items.query.get_or_404(id)
+    filename = uts.get_filename()   
     
     if request.method == 'POST':
         
@@ -419,8 +415,13 @@ def update_temp_item_route(id):
             db.session.rollback()
             logger.error(f"Error updating temp item: {e}")
             return 'Error updating temp item'
+        
+          
+    return render_template('update_items_temp.html', filename=filename, task=item)
     
-    return render_template('update_items_temp.html', task=item)
+
+
+
 
 # Utility routes
 @app.route('/home/')

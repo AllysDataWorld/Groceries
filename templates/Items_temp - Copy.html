@@ -17,13 +17,39 @@
         function lastUpload() {
             window.location.href = "/last_upload/";
         }        
-                 
+        
+        function updateDate() {
+            window.location.href = "/update_date/";
+        }                
     </script>
 {% endblock %}
 
 {% block body %}
+    <p><h1 align="center">TEMP<br>Items Database</h1></p>
 
-<p><h1 align="center">TEMP<br>Items Database</h1></p>
+    <div class="content">
+        {% if tasks|length > 0 %}		
+        <div class="container" align="center">
+            <button class="nice-button" onclick="goToBulkInsert()">Save All Items!</button>
+            <button class="nice-button_red" onclick="deleteTemp()">Delete and ReUpload!</button>
+        </div>
+        {% else %}
+        <div class="container" align="center">
+            <button class="nice-button" onclick="window.location.href='/upload/'">Upload New Receipt</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <div class="row">
+            {% if filename %}
+                <div>
+                    <img src="{{ url_for('display_image', filename=filename) }}" width="500" height="600">
+                    <br><br>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 
     <div class="container">
         <div class="row">
@@ -43,45 +69,6 @@
         </div>
     </div>
 
-<TABLE>
-  <tr>
-    <th>Receipt Uploaded </th>
-    <th>Receipt Items</th> 
-  </tr>
-  <tr>
-    <td>
-    
-    <div class="content">
-        {% if tasks|length > 0 %}		
-        <div class="container" align="center">
-            <button class="nice-button" onclick="goToBulkInsert()">Save All Items!</button>
-            <button class="nice-button_red" onclick="deleteTemp()">Delete and ReUpload!</button>
-        </div>
-        {% else %}
-        <div class="container" align="center">
-            <button class="nice-button" onclick="window.location.href='/upload/'">Upload New Receipt</button>
-        </div>
-        {% endif %}
-        
-        <div class="container">
-            <div class="row">
-                {% if filename %}
-                    <div>
-                        <img src="{{ url_for('display_image', filename=filename) }}" width="500" height="600">
-                        <br><br>
-                    </div>
-                {% endif %}
-            </div>
-        </div>        
-            
-        
-    </div>    
-    
-    
-    
-    </td>
-    <td>
-    
     <div class="content">
         {% if tasks|length < 1 %}
         <h4 style="text-align: center">There are no uploaded receipts. Upload a new receipt!</h4>
@@ -127,17 +114,7 @@
         </table>
 
         {% endif %}
-    </div>    
-    
-    </td>
-  </tr>
-</TABLE>
-
-
-
-
-
-
+    </div>
 
     <br>
     <hr>
