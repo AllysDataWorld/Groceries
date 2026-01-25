@@ -3,6 +3,7 @@
 *.log
 static/uploads/*
 groceries.db
+ai/AskedGoogleGemini/*.json
 
 
 
