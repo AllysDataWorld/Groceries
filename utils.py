@@ -1,3 +1,5 @@
+import sys
+
 import os
 import re
 import pytz
@@ -5,11 +7,9 @@ import csv
 from datetime import datetime, date
 
 from database import db
-import utils as uts
 from app import app, logger
 from config import Config
 from models import Groceries, Grocery_Items, Grocery_TEMP_Items
-
 
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import or_, select
@@ -66,7 +66,7 @@ def get_filename():
 
 
 def get_upload_date():
-    """Get date of upload from OCR_text.csv."""
+    """Get date of upload from OCR_text.csv. This is the date the user input on the website"""
     from app import app
     try:
         temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
@@ -83,8 +83,6 @@ def get_upload_items():
         list_of_items = fin.read().splitlines()
     upload_date = get_upload_date()
     return list_of_items, upload_date
-
-
 
 def sum_price_list(price_list):
     """Calculate sum of prices in list."""
@@ -114,7 +112,10 @@ def how_long_ago(date):
         return f"{diff.years} years"
     return f"{difference.days} days"
 
+
+#########################
 # Database Operations
+#########################
 def add_raw_receipt(raw_text, store, price, filename):
     """Add receipt to main Groceries table."""
     from database import db
@@ -126,7 +127,6 @@ def add_raw_receipt(raw_text, store, price, filename):
         filename=filename,
         subtotal=price
     )
-    
     try:
         db.session.add(new_receipt)
         db.session.commit()
@@ -170,21 +170,22 @@ def add_grocery_item(item_data):
 
 def bulk_add_grocery_item(temp_items):
     # Calculate totals and create main receipt record
-    total_price = uts.sum_price_list([item.price for item in temp_items])
+    total_price = sum_price_list([item.price for item in temp_items])
     store_name = temp_items[0].storeName
 
     temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
     with open(temp_ocr, 'r') as f:
         raw_text = f.read()
     
-    receipt_id = uts.add_raw_receipt(raw_text, store_name, total_price, uts.get_filename())
+    receipt_id = add_raw_receipt(raw_text, store_name, total_price, get_filename())
        
     send_to_ai = [temp_item.myItem for temp_item in temp_items]
     output_ai = os.path.join(app.config['OUTPUT_FOLDER'], 'send_to_ai.csv')
     with open(output_ai, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(send_to_ai)
-    
+
+    # Bulk insert items
     grocery_items = []
     for temp_item in temp_items:
         item_data = {
@@ -199,7 +200,6 @@ def bulk_add_grocery_item(temp_items):
             'groceries_id': receipt_id
         }
         grocery_items.append(Grocery_Items(**item_data))
-    
     db.session.bulk_save_objects(grocery_items)
     db.session.commit()
     
@@ -207,8 +207,6 @@ def bulk_add_grocery_item(temp_items):
     Grocery_TEMP_Items.query.delete()
     db.session.commit()
     return grocery_items
-
-
 
 
   
@@ -274,24 +272,83 @@ def process_receipt_text(image_path, store, filename):
     return raw_text, new_rows, total_price
 
 
+
+def get_OCRtext():
+    """Helper function for Get_Upload_date_from_OCRText: Get text from OCR.csv"""
+    from app import app
+    import os
+    try:
+        OCR_FILE = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
+        all_text = open(OCR_FILE).readlines()
+        text_list = []
+        for text in all_text:
+            if text == "\n":
+                pass
+            else:
+                text = text.split('\n')[0]
+                text_list.append(text)
+    except FileNotFoundError:
+        return "get_OCRtext() File Note Found"
+    return text_list
+
+
+def get_upload_date_from_OCRText():
+    possible_list = []
+    text_list = get_OCRtext()
+
+    matches = [(i, element) for i, element in enumerate(text_list)
+               if element.startswith("Date")]
+    print(f"Look for Date in OCR Text -> result: {matches}")
+    num_matches = len(matches)
+
+    if num_matches == 0:
+        dt = 0
+    elif num_matches == 1:
+        dt = matches[0][1].split(' ')[1]  # one match
+    else:
+        possible_list = [dt_m[1] for dt_m in matches]
+        dt = possible_list[0][0]
+    print(f"Date -> result: {dt}")
+
+    # dt = '24/11/21'
+    if len(dt.split('/')) == 3:
+        year = int("20" + dt.split('/')[0])
+        month = int(dt.split('/')[1])
+        day = int(dt.split('/')[2])
+        OCR_dt = date(year, month, day)
+        OCR_dt = convert_date(OCR_dt)
+        human_readable = OCR_dt.strftime("%B %d, %Y")
+        print(
+        f"From OCR and found {num_matches} matches, suggested date is {human_readable},and the other options are {possible_list}")
+        return OCR_dt
+    else:
+        print(f"Date not in the expected format 24/11/21")
+        return None
+
+
+
+
+
 def process_uploaded_file(file_path, store, filename, receipt_date):
-    
-    if receipt_date=="":
-        receipt_date = get_toronto_time()
-    
+
     # Process receipt
     raw_text, new_rows, total_price = process_receipt_text(file_path, store, filename)
     
     # Clear temp table and save OCR result
     Grocery_TEMP_Items.query.delete()
     db.session.commit()
-    
 
     temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
     with open(temp_ocr, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow([receipt_date, filename, store, raw_text])
-    
+
+    if receipt_date=="" or receipt_date is None:
+        receipt_date = get_upload_date_from_OCRText()
+
+    receipt_date = convert_date(receipt_date)
+
+
     # Add items to temp table
     for item in new_rows:
         item_data = {
@@ -300,11 +357,11 @@ def process_uploaded_file(file_path, store, filename, receipt_date):
             'price': item[2],
             'storeName': store,
             'filename': filename,
-            'recepitDate': uts.convert_date(receipt_date),
+            'recepitDate':receipt_date,
             'myCategory': '',
             'myItem': ''
         }
-        uts.add_temp_item(item_data)
+        add_temp_item(item_data)
     
     # Attempt to label items automatically
     bought_once, frequent_items = guess_labels(Config.VERBOSE)
@@ -323,11 +380,11 @@ def guess_labels(VERBOSE):
         logger.info(message)
     
     for i, temp_item in enumerate(temp_items):
-        clean_item = uts.clean_produce(temp_item.storeItem)
+        clean_item = clean_produce(temp_item.storeItem)
         if not clean_item:
             continue
         
-        matches = uts.find_store_item_matches(clean_item)
+        matches = find_store_item_matches(clean_item)
         if VERBOSE:
             message = f"Processing item {i}: {clean_item}"
             print(message)

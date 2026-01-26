@@ -175,7 +175,6 @@ def create_metro_df(text_list, VERBOSE):
 
 # PATH = r"C:\Users\after\OneDrive\Desktop\code_from_HD\Groceries\Groceries\FLASK\final_versions\v12_newenv\output"
 # FILE = PATH + r'\OCR_text.csv'
-# text_list = TEST_CONVERT_CSV_TO_df(FILE)
 
 # def TEST_CONVERT_CSV_TO_df(FILE):
 #     all_text = open(FILE).readlines()
@@ -187,12 +186,9 @@ def create_metro_df(text_list, VERBOSE):
 #             text = text.split('\n')[0]
 #             text_list.append(text)
 #     return text_list
+# text_list = TEST_CONVERT_CSV_TO_df(FILE)
+# df_receipt, df_cln, df_lev = create_metro_df(text_list)
 
-#     df_receipt, df_cln, df_lev = create_metro_df(text_list)
-#     df_cln.to_csv("df_cln.csv", index=0)
-#     df_receipt.to_csv("df_flags.csv", index=0)
-
- 
  
 #TESTING: UPLOAD a recept using GUI: this will create the OCR_text.csv
 #FILE = r'C:\Users\after\OneDrive\Desktop\code_from_HD\Groceries\Groceries\FLASK\final_versions\v9\OCR_text.csv'

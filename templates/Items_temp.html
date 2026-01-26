@@ -15,7 +15,11 @@
         function guessLabelForNewItems() {
             window.location.href = "/guess_label_for_new_items/";
         }
-        
+
+         function fake_populate_all() {
+            window.location.href = "/fake_populate_all/";
+        }
+
         function lastUpload() {
             window.location.href = "/last_upload/";
         }        
@@ -132,6 +136,8 @@
         <div class="container" align="center">
             <button class="nice-button_lightgreen" onclick="guessLabelForNewItems()">Guess for New Items!</button>
             <button class="nice-button_lightred" onclick="deleteSelected()">Delete Selected</button>
+            <br><br>
+            <button class="nice-button-green"  onclick="fake_populate_all()">fake_populate_all</button>
         </div>
 
         <table>

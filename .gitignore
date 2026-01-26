@@ -1,6 +1,7 @@
 *.txt
 *.csv
 *.log
+*.idea
 static/uploads/*
 groceries.db
 ai/AskedGoogleGemini/*.json

@@ -12,6 +12,35 @@ from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 from code_helpers.levenshtein_distance import levenshtein_distance
 
+
+@app.route('/fake_populate_all/')
+def fake_populate_all():
+    """fake_populate_all - use for testing."""
+
+    all_items = uts.find_store_item_matches("")  # Get all items
+    unlabeled_items = uts.get_unlabeled_items()
+
+    for row_num, temp_item in enumerate(unlabeled_items):
+        clean_item = uts.clean_produce(temp_item.storeItem)
+
+        temp_item.myItem = "myItem"
+        temp_item.myCategory = 'myCategory'
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+
+    flash(f"DUMMY Values Populated")
+    filename = uts.get_filename()
+    temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
+    return render_template('Items_temp.html', filename=filename, tasks=temp_items)
+
+
+
+
+
+
 @app.route('/guess_label_for_new_items/')
 def guess_label_for_new_items():
     """Use Levenshtein distance to guess labels for new items."""
@@ -57,6 +86,7 @@ def guess_label_for_new_items():
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     return render_template('Items_temp.html', filename=filename, tasks=temp_items)
 
+
 @app.route('/save_grocery_item/')
 def save_grocery_item():
     """Save all temp items to main database."""
@@ -73,48 +103,7 @@ def save_grocery_item():
         return redirect('/upload/')
   
     grocery_items = uts.bulk_add_grocery_item(temp_items)
-    
-    # Calculate totals and create main receipt record
-    total_price = uts.sum_price_list([item.price for item in temp_items])
-    store_name = temp_items[0].storeName
 
-    temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
-    with open(temp_ocr, 'r') as f:
-        raw_text = f.read()
-    
-    receipt_id = uts.add_raw_receipt(raw_text, store_name, total_price, uts.get_filename())
-       
-
-    send_to_ai = [temp_item.myItem for temp_item in temp_items]
-    output_ai = os.path.join(app.config['OUTPUT_FOLDER'], 'send_to_ai.csv')
-    with open(output_ai, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(send_to_ai)
-            
-    
-    # Bulk insert items
-    grocery_items = []
-    for temp_item in temp_items:
-        item_data = {
-            'storeItem': temp_item.storeItem,
-            'myCategory': temp_item.myCategory,
-            'storeCategory': temp_item.storeCategory,
-            'myItem': temp_item.myItem,
-            'storeName': temp_item.storeName,
-            'price': temp_item.price,
-            'filename': temp_item.filename,
-            'recepitDate': temp_item.recepitDate,
-            'groceries_id': receipt_id
-        }
-        grocery_items.append(Grocery_Items(**item_data))
-    
-    db.session.bulk_save_objects(grocery_items)
-    db.session.commit()
-    
-    # Clear temp table
-    Grocery_TEMP_Items.query.delete()
-    db.session.commit()
-    
     message = f"Inserted {len(grocery_items)} items into Grocery_Items"
     logger.info(message)
     print (message)

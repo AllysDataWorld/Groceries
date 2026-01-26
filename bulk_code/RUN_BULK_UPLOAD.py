@@ -11,8 +11,7 @@ from bulk_code.bulk_upload import bulk_upload
 from config import Config
 
 #PATH = r'\receipts\one\wip'
-PATH = r'\receipts\bulk_upload_all\test'
-
+PATH = r'\receipts\bulk_upload_all\wip'
 BASE = r'C:\Users\after\OneDrive\Desktop\code_from_HD\Groceries\Groceries\FLASK\final_versions'
 thisStore = "Metro"
 
@@ -25,4 +24,4 @@ logger.info('\n-----------------------------\nBULK UPLOAD PROCESS using V12 Metr
 
 
 
-bulk_upload(True, folder, logger, thisStore, Config.VERBOSE) #fuzzy matching is off
+bulk_upload( folder, logger, thisStore, Config.VERBOSE) #fuzzy matching is off
