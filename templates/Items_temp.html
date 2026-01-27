@@ -80,6 +80,64 @@
             
             lastCheckedIndex = currentIndex;
         }
+
+		function openImageModal() {
+            const modal = document.getElementById("receiptModal");
+            const container = document.getElementById("modalContainer");
+            modal.style.display = "block";
+            // Reset position when opening
+            container.style.left = '0px';
+            container.style.top = '0px';
+        }
+
+        function closeImageModal() {
+            document.getElementById("receiptModal").style.display = "none";
+        }
+
+        // Panning functionality
+        let isDragging = false;
+        let startX, startY;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById("receiptModal");
+            const container = document.getElementById("modalContainer");
+            const closeBtn = document.getElementById("closeBtn");
+
+            modal.addEventListener('mousedown', function(e) {
+                if (e.target === closeBtn) return;
+                isDragging = true;
+                modal.classList.add('grabbing');
+                startX = e.pageX - container.offsetLeft;
+                startY = e.pageY - container.offsetTop;
+            });
+
+            modal.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                const x = e.pageX - startX;
+                const y = e.pageY - startY;
+                container.style.left = x + 'px';
+                container.style.top = y + 'px';
+            });
+
+            modal.addEventListener('mouseup', function() {
+                isDragging = false;
+                modal.classList.remove('grabbing');
+            });
+
+            modal.addEventListener('mouseleave', function() {
+                isDragging = false;
+                modal.classList.remove('grabbing');
+            });
+
+            // Close on ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.style.display === 'block') {
+                    closeImageModal();
+                }
+            });
+        });
+	
     </script>
 {% endblock %}
 
@@ -102,13 +160,30 @@
     <div class="container">
         <div class="row">
             {% if filename %}
-                <div>
-                    <img src="{{ url_for('display_image', filename=filename) }}" width="500" height="600">
+				<div align="center">
+						<img id="mainReceipt" 
+                         class="zoom-img"
+                         src="{{ url_for('display_image', filename=filename) }}" 
+                         width="500" height="600" 
+                         onclick="openImageModal()">	
+					<p><small>Click image to enlarge</small></p>
                     <br><br>
                 </div>
             {% endif %}
         </div>
     </div>
+	
+	
+	<div id="receiptModal" class="modal">
+        <button class="close-button" id="closeBtn" onclick="closeImageModal()">×</button>
+        <div class="modal-container" id="modalContainer">
+            <img class="modal-content" src="{{ url_for('display_image', filename=filename) }}">
+        </div>
+        <div class="modal-instructions">Click and drag to pan • Press ESC or click × to close</div>
+    </div>
+	
+	
+	
 
     <div class="container">
         <div class="row">
@@ -140,6 +215,15 @@
             <button class="nice-button-green"  onclick="fake_populate_all()">fake_populate_all</button>
         </div>
 
+
+        <h4 style="text-align: center">Change the Date!</h4>
+            <form align="center" method="post" action="/change_recepit_date/" enctype="multipart/form-data">
+                <input type="submit" value="change the date" class="btn btn-info">
+                <input type="date" name="recepitDate" id="recepitDate"
+                       value="{{current_date}}">
+                <br><br>
+            </form>
+
         <table>
             <tr>
                 <th><input type="checkbox" onclick="toggleAll(this)" title="Select All"></th>
@@ -166,7 +250,7 @@
                     <td>{{ task.myCategory }}</td>
                     <td>{{ task.myItem }}</td>
                     <td>${{ "%.2f"|format(task.price) }}</td>
-                    <td>{{ task.recepitDate.date().strftime('%d-%m-%Y') }}</td>
+                    <td>{{ task.recepitDate.date().strftime('%Y-%m-%d') }}</td>
                     <td>{{ task.recepitDate.time().strftime("%H:%M:%S") }}</td>
                     <td>
                         <a href="/delete_temp_item/{{task.id}}">Delete</a>

@@ -28,7 +28,17 @@ def bulk_upload_qa():
                 return None # exit out of this process
             
             continue  # Restart the process
-        
+
+        # if receipt_date is today's date, then user has to say 'yes' to continue
+        current_date = uts.get_date_from_db().date()
+        today_date = date.today().strftime('%Y-%m-%d')
+
+        if today_date == today_date:
+            user_input = input("The receipt date was automattically set to today's date. If this is correct please say YES\n")
+            if user_input != 'YES':
+                continue  # Restart the process
+
+
         temp_items = Grocery_TEMP_Items.query.all()
         if not temp_items:
             print("No items to save")

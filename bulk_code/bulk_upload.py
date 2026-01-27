@@ -39,20 +39,24 @@ def bulk_upload(folder_path, logger, thisStore, VERBOSE):
     total_files = len(UPLOAD_FOLDER)
 
     #myNOTE = folder_path.split('\\')[-1]
-    if VERBOSE: print_n_log(f"*******\nThere are {len(UPLOAD_FOLDER)} files to BULK UPLOAD in folder {folder_path}\n*******\n", logger)
+    print_n_log(f"*******\nThere are {len(UPLOAD_FOLDER)} files to BULK UPLOAD in folder {folder_path}\n*******\n", logger)
 
     #file the upload date from the filename or from the OCR Text:
-        
-
 
     for filenumber, filename in enumerate(UPLOAD_FOLDER):
         file_path = os.path.join(folder_path, filename)
         if os.path.isfile(file_path):
-            if VERBOSE: print_n_log("-"*100, "\nNEW RECEIPT\n", "Uploading Filename", filename, "-"*100)
-            if VERBOSE: print_n_log(f"\n\nPROCESS: {filename}: {filenumber} of {total_files}", logger)
-            
+            output = (
+                f"{'-' * 50}\n"
+                f"NEW RECEIPT\n"
+                f"Uploading Filename: {filename}\n"
+                f"{'-' * 50}\n"
+                f"{filenumber} of {total_files}\n"
+            )
+            print_n_log(output, logger)
+
 #-----------Process receipt: Update Grocery_TEMP_Items DB
-            bought_once, frequent_items = uts.process_uploaded_file(file_path, thisStore, filename, "") #Upload date is blank
+            bought_once, frequent_items = uts.process_uploaded_file(file_path, thisStore, filename, "", True) #Upload date is blank
             temp_items = b_uts.bulk_upload_qa()
             if temp_items: uts.bulk_add_grocery_item(temp_items) #if return None then user existed and do not execute this function
 

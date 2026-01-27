@@ -39,7 +39,7 @@ def convert_date(date_input):
     elif isinstance(date_input, date):
         return date_input
     else:
-        return datetime.strptime(date_input, '%Y-%m-%d').date()
+        return datetime.strptime(date_input, '%d-%m-%Y').date()
 
 def convert_price(price):
     """Convert price input to float."""
@@ -247,6 +247,17 @@ def get_unpopulated_items():
         )
     ).scalars().all()
 
+
+def get_date_from_db():
+    """Get the current date from Grocery_TEMP."""
+    from database import db
+    #Get the first item's date
+    result = db.session.execute(
+        select(Grocery_TEMP_Items.recepitDate).limit(1)
+    ).scalar()
+    return convert_date(result)
+
+
 # OCR and Text Processing
 def process_receipt_text(image_path, store, filename):
     """Process receipt image and extract text."""
@@ -291,6 +302,13 @@ def get_OCRtext():
         return "get_OCRtext() File Note Found"
     return text_list
 
+def convert_date_to_format(thisdate):
+    # Convert to your desired format
+    from datetime import datetime
+    date_obj = datetime.strptime(thisdate, '%Y-%m-%d')
+    newdate = date_obj.strftime('%d-%m-%Y')
+    return newdate
+
 
 def get_upload_date_from_OCRText():
     possible_list = []
@@ -302,16 +320,14 @@ def get_upload_date_from_OCRText():
     num_matches = len(matches)
 
     if num_matches == 0:
-        dt = 0
+        dt = ""
     elif num_matches == 1:
         dt = matches[0][1].split(' ')[1]  # one match
     else:
         possible_list = [dt_m[1] for dt_m in matches]
         dt = possible_list[0][0]
-    print(f"Date -> result: {dt}")
 
-    # dt = '24/11/21'
-    if len(dt.split('/')) == 3:
+    if len(dt.split('/')) == 3: # Expecting the format '24/11/21'
         year = int("20" + dt.split('/')[0])
         month = int(dt.split('/')[1])
         day = int(dt.split('/')[2])
@@ -322,14 +338,14 @@ def get_upload_date_from_OCRText():
         f"From OCR and found {num_matches} matches, suggested date is {human_readable},and the other options are {possible_list}")
         return OCR_dt
     else:
-        print(f"Date not in the expected format 24/11/21")
+        print(f"Date not in the expected format YEAR/MO/DAY - Ask User What is the date of this receipt")
         return None
 
 
 
 
 
-def process_uploaded_file(file_path, store, filename, receipt_date):
+def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process):
 
     # Process receipt
     raw_text, new_rows, total_price = process_receipt_text(file_path, store, filename)
@@ -343,11 +359,8 @@ def process_uploaded_file(file_path, store, filename, receipt_date):
         writer = csv.writer(csvfile)
         writer.writerow([receipt_date, filename, store, raw_text])
 
-    if receipt_date=="" or receipt_date is None:
-        receipt_date = get_upload_date_from_OCRText()
-
+    receipt_date = get_upload_date_from_OCRText()
     receipt_date = convert_date(receipt_date)
-
 
     # Add items to temp table
     for item in new_rows:

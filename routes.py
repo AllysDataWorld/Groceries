@@ -34,7 +34,9 @@ def fake_populate_all():
     flash(f"DUMMY Values Populated")
     filename = uts.get_filename()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Items_temp.html', filename=filename, tasks=temp_items)
+    return render_template('Items_temp.html',
+                           current_date=uts.get_date_from_db().date(),
+                           filename=filename, tasks=temp_items)
 
 
 
@@ -84,7 +86,9 @@ def guess_label_for_new_items():
     
     filename = uts.get_filename() 
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Items_temp.html', filename=filename, tasks=temp_items)
+    return render_template('Items_temp.html',
+                           current_date=uts.get_date_from_db().date(),
+                           filename=filename, tasks=temp_items)
 
 
 @app.route('/save_grocery_item/')
@@ -190,19 +194,7 @@ def manual_add_receipt():
     
     return render_template('add_item.html')
 
-# Routes - Updates and Deletes
-# @app.route('/update_date/')
-# def update_date():
-#     """Update receipt date for all temp items."""
-#     new_date = uts.get_toronto_time()
-#     session.query(Grocery_TEMP_Items).update({
-#         Grocery_TEMP_Items.recepitDate: new_date
-#     })
-#     session.commit()
-    
-#     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-#     return render_template('Items_temp.html', filename=uts.get_filename(), tasks=temp_items)
-    
+
     
 ########################################################
 # Delete routes
@@ -382,11 +374,10 @@ def update_items_route(id):
         item.myCategory = request.form['updated_myCategory']
         item.myItem = request.form['updated_myItem']
         item.price = uts.convert_price(request.form['updated_price'])
-        
-        new_date = uts.convert_date(request.form['updated_date'])
-        if item.recepitDate.date() > new_date:
-            item.recepitDate = new_date
-        
+
+        new_date = uts.convert_date_to_format(request.form['updated_date'])
+        item.recepitDate = uts.convert_date(new_date)
+
         try:
             db.session.commit()
             return redirect('/items/')
@@ -434,6 +425,8 @@ def update_temp_item_route(id):
         item.price = uts.convert_price(request.form['updated_price'])
         
         new_date = uts.convert_date(request.form['updated_date'])
+        new_date = uts.convert_date_to_format(new_date)
+
         if item.recepitDate.date() > new_date:
             item.recepitDate = new_date
         
@@ -482,7 +475,9 @@ def last_upload():
     """Show items from last upload."""
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     filename = uts.get_filename() if temp_items else ''
-    return render_template('Items_temp.html', filename=filename, tasks=temp_items)
+    return render_template('Items_temp.html',
+                           current_date=uts.get_date_from_db().date(),
+                           filename=filename, tasks=temp_items)
 
 @app.route('/display/<filename>')
 def display_image(filename):
@@ -551,9 +546,31 @@ def export_distinct_items():
         logger.error(f"Error exporting distinct items: {e}")
         flash(f"Error exporting items: {str(e)}")
         return redirect('/delete_page/')
-    
 
-    
+
+@app.route('/change_recepit_date/', methods=['GET', 'POST'])
+def change_recepit_date():
+    receipt_date = request.form.get('recepitDate') # This will be 'YYYY-MM-DD'
+    if receipt_date:
+        # Convert to your desired format
+        formatted_date = uts.convert_date_to_format(receipt_date)
+        formatted_date = uts.convert_date(formatted_date)
+
+        db.session.query(Grocery_TEMP_Items).update({
+            Grocery_TEMP_Items.recepitDate: formatted_date
+        })
+        db.session.commit()
+    else:
+        flash("Date Field is empty")
+    temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
+    return render_template('Items_temp.html',
+                           current_date=uts.get_date_from_db().date(),
+                           filename=uts.get_filename(), tasks=temp_items)
+
+
+
+
+
 ########################################################
 # UPLOAD routes
 ########################################################
@@ -585,13 +602,12 @@ def upload():
     
     # Get form data
     store = request.form.get('storeName') or request.form.get('store_name_options')
-    receipt_date = request.form.get('recepitDate')
 
     logger.info(f"\nUploaded: {filename}")
     print(f"\nUploaded: {filename}")
     flash(f"Uploaded: {filename}")
     
-    bought_once, frequent_items = uts.process_uploaded_file(file_path, store, filename, receipt_date)
+    bought_once, frequent_items = uts.process_uploaded_file(file_path, store, filename, "", False)
     
     if bought_once:
         flash(f"{len(bought_once)} items bought once before")
@@ -607,4 +623,6 @@ def upload():
     #uts.uploaded_items_to_ai()
     
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Items_temp.html', filename=filename, tasks=temp_items)
+    return render_template('Items_temp.html',
+                           current_date=uts.get_date_from_db().date(),
+                           filename=filename, tasks=temp_items)
