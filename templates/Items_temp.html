@@ -1,6 +1,54 @@
 {% extends 'base.html' %}
 
 {% block header %}
+    <style>
+        .date-warning-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .date-warning-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 30px;
+            border: 3px solid #ffc107;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .date-warning-content h2 {
+            color: #856404;
+            margin-top: 0;
+        }
+
+        .date-warning-content p {
+            font-size: 16px;
+            margin: 20px 0;
+        }
+
+        .warning-close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .warning-close-btn:hover {
+            color: #000;
+        }
+    </style>
+    
     <script>
         let lastCheckedIndex = null;
         
@@ -94,6 +142,10 @@
             document.getElementById("receiptModal").style.display = "none";
         }
 
+        function closeDateWarning() {
+            document.getElementById('dateWarningModal').style.display = 'none';
+        }
+
         // Panning functionality
         let isDragging = false;
         let startX, startY;
@@ -136,7 +188,20 @@
                     closeImageModal();
                 }
             });
+
+            // Show date warning modal if needed
+            {% if show_date_warning %}
+                document.getElementById('dateWarningModal').style.display = 'block';
+            {% endif %}
         });
+
+        // Close date warning when clicking outside
+        window.onclick = function(event) {
+            var modal = document.getElementById('dateWarningModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
 	
     </script>
 {% endblock %}
@@ -182,6 +247,17 @@
         <div class="modal-instructions">Click and drag to pan • Press ESC or click × to close</div>
     </div>
 	
+	<!-- Date Warning Modal -->
+	<div id="dateWarningModal" class="date-warning-modal">
+        <div class="date-warning-content">
+            <span class="warning-close-btn" onclick="closeDateWarning()">&times;</span>
+            <h2>⚠️ Date Warning</h2>
+            <p><strong>Today's date is being used.</strong></p>
+            <p>The system could not find a date on the receipt, so today's date was automatically filled in.</p>
+            <p>Please verify this is correct before saving.</p>
+            <button onclick="closeDateWarning()" class="btn btn-primary">I Understand</button>
+        </div>
+    </div>
 	
 	
 
@@ -220,7 +296,11 @@
             <form align="center" method="post" action="/change_recepit_date/" enctype="multipart/form-data">
                 <input type="submit" value="change the date" class="btn btn-info">
                 <input type="date" name="recepitDate" id="recepitDate"
-                       value="{{current_date}}">
+                       value="{{current_date}}"
+                       style="{% if show_date_warning %}border: 3px solid #ffc107; background-color: #fff9e6;{% endif %}">
+                {% if show_date_warning %}
+                    <span style="color: #ff9800; font-size: 18px; margin-left: 10px;" title="Auto-filled with today's date">⚠️</span>
+                {% endif %}
                 <br><br>
             </form>
 

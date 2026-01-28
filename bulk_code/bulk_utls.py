@@ -13,41 +13,42 @@ import utils as uts
 def bulk_upload_qa():
     """Save all temp items to main database."""
     while True:  # Loop to allow user to retry after fixing errors
+
+        # if receipt_date is today's date, then user has to say 'yes' to continue
+        current_date = uts.get_date_from_db().date()
+        today_date = uts.convert_date(date.today())
+        #print(f"current_date: {current_date} \ntoday_date: {today_date} \nif statement is {current_date == today_date}")
+
         unpopulated = uts.get_unpopulated_items()
-        
+
         if unpopulated:
             print("Please complete all required fields on the website before saving:")
-            
+
             for  item in (unpopulated):
                 print(f"> My_Label or My_Category is missing: {item.storeItem}")
-            
+
             # Give user a chance to fix and retry
             user_input = input("Press Enter after fixing the errors on the website, to try again, or type 'xxx' to abort: ").strip().lower()
             if user_input.lower() == 'xxx':
                 print("Bulk upload cancelled.")
                 return None # exit out of this process
-            
+
             continue  # Restart the process
 
-        # if receipt_date is today's date, then user has to say 'yes' to continue
-        current_date = uts.get_date_from_db().date()
-        today_date = date.today().strftime('%Y-%m-%d')
-
-        if today_date == today_date:
+        if current_date == today_date:
             user_input = input("The receipt date was automattically set to today's date. If this is correct please say YES\n")
             if user_input != 'YES':
                 continue  # Restart the process
 
-
+        #used the website to save the table
         temp_items = Grocery_TEMP_Items.query.all()
         if not temp_items:
             print("No items to save")
             return None # exit out of this process
 
         # If we reach here, everything is valid
+        temp_items = Grocery_TEMP_Items.query.all()
         return temp_items
-
-
 
 
 def get_date_for_bulk(filename):

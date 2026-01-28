@@ -206,6 +206,7 @@ def bulk_add_grocery_item(temp_items):
     # Clear temp table
     Grocery_TEMP_Items.query.delete()
     db.session.commit()
+    db.session.expunge_all()  # Add this line
     return grocery_items
 
 
@@ -312,20 +313,28 @@ def convert_date_to_format(thisdate):
 
 def get_upload_date_from_OCRText():
     possible_list = []
+    found_date = False
     text_list = get_OCRtext()
 
     matches = [(i, element) for i, element in enumerate(text_list)
                if element.startswith("Date")]
-    print(f"Look for Date in OCR Text -> result: {matches}")
+
     num_matches = len(matches)
 
     if num_matches == 0:
         dt = ""
+        found_date = False
+        print ("Receipt Date was not found")
     elif num_matches == 1:
         dt = matches[0][1].split(' ')[1]  # one match
+        found_date = True
     else:
         possible_list = [dt_m[1] for dt_m in matches]
         dt = possible_list[0][0]
+        found_date = True
+        print(f"Look for Date in OCR Text -> matches: {matches}")
+        print(f"Look for Date in OCR Text -> possible_list: {possible_list}")
+        print(f"Look for Date in OCR Text -> suggested dt: {dt}")
 
     if len(dt.split('/')) == 3: # Expecting the format '24/11/21'
         year = int("20" + dt.split('/')[0])
@@ -334,11 +343,11 @@ def get_upload_date_from_OCRText():
         OCR_dt = date(year, month, day)
         OCR_dt = convert_date(OCR_dt)
         human_readable = OCR_dt.strftime("%B %d, %Y")
-        print(
-        f"From OCR and found {num_matches} matches, suggested date is {human_readable},and the other options are {possible_list}")
+        print(f"The date on the receipt was {human_readable}")
         return OCR_dt
     else:
-        print(f"Date not in the expected format YEAR/MO/DAY - Ask User What is the date of this receipt")
+        #print(f"Date is not in the expected format YEAR/MO/DAY")
+        print("Please confirm receipt date")
         return None
 
 
@@ -362,7 +371,7 @@ def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process
     receipt_date = get_upload_date_from_OCRText()
     receipt_date = convert_date(receipt_date)
 
-    # Add items to temp table
+    # Add items to Grocery_TEMP_Items table
     for item in new_rows:
         item_data = {
             'storeItem': item[1],

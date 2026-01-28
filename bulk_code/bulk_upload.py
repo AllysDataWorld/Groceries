@@ -51,7 +51,7 @@ def bulk_upload(folder_path, logger, thisStore, VERBOSE):
                 f"NEW RECEIPT\n"
                 f"Uploading Filename: {filename}\n"
                 f"{'-' * 50}\n"
-                f"{filenumber} of {total_files}\n"
+                f"{filenumber+1} of {total_files}\n"
             )
             print_n_log(output, logger)
 

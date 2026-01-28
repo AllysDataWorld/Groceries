@@ -1,6 +1,6 @@
 import csv
 import os
-#from datetime import datetime
+from datetime import date
 
 from app import app, logger
 from models import Groceries, Grocery_Items, Grocery_TEMP_Items
@@ -577,6 +577,7 @@ def change_recepit_date():
 
 @app.route('/upload/', methods=['GET', 'POST'])
 def upload():
+
     """Handle file upload and processing."""
     if request.method == 'GET':
         return render_template('upload.html')
@@ -611,8 +612,8 @@ def upload():
     
     if bought_once:
         flash(f"{len(bought_once)} items bought once before")
-        for item, date in bought_once.items():
-            days_ago = uts.how_long_ago(date)
+        for item, thisdate in bought_once.items():
+            days_ago = uts.how_long_ago(thisdate)
             flash(f"{item} was bought {days_ago} ago")
     
     if frequent_items:
@@ -621,8 +622,17 @@ def upload():
             flash(f"{item} bought {count} times before")
 
     #uts.uploaded_items_to_ai()
-    
+
+
+    current_date = uts.get_date_from_db().date()
+    today_date = uts.convert_date(date.today())
+    show_date_warning = (current_date == today_date)
+    print(f"current_date: {current_date} \ntoday_date: {today_date} \nif statement is {show_date_warning}")
+
+
+
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     return render_template('Items_temp.html',
-                           current_date=uts.get_date_from_db().date(),
+                           current_date=current_date,
+                           show_date_warning=show_date_warning,
                            filename=filename, tasks=temp_items)
