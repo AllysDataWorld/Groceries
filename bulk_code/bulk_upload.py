@@ -56,7 +56,9 @@ def bulk_upload(folder_path, logger, thisStore, VERBOSE):
             print_n_log(output, logger)
 
 #-----------Process receipt: Update Grocery_TEMP_Items DB
-            bought_once, frequent_items = uts.process_uploaded_file(file_path, thisStore, filename, "", True) #Upload date is blank
+            bought_once, frequent_items, total_price = uts.process_uploaded_file(
+                file_path, thisStore, filename,
+                "", True) #Upload date is blank
             temp_items = b_uts.bulk_upload_qa()
             if temp_items: uts.bulk_add_grocery_item(temp_items) #if return None then user existed and do not execute this function
 

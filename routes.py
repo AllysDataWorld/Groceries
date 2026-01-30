@@ -19,6 +19,7 @@ def fake_populate_all():
 
     all_items = uts.find_store_item_matches("")  # Get all items
     unlabeled_items = uts.get_unlabeled_items()
+    total_price = uts.get_totalprice_from_db()
 
     for row_num, temp_item in enumerate(unlabeled_items):
         clean_item = uts.clean_produce(temp_item.storeItem)
@@ -35,6 +36,7 @@ def fake_populate_all():
     filename = uts.get_filename()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     return render_template('Items_temp.html',
+                           total_price = total_price,
                            current_date=uts.get_date_from_db().date(),
                            filename=filename, tasks=temp_items)
 
@@ -84,9 +86,11 @@ def guess_label_for_new_items():
         for original, matched in new_matches.items():
             flash(f"{original} → {matched}")
     
-    filename = uts.get_filename() 
+    filename = uts.get_filename()
+    total_price = uts.get_totalprice_from_db()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     return render_template('Items_temp.html',
+                           total_price = total_price,
                            current_date=uts.get_date_from_db().date(),
                            filename=filename, tasks=temp_items)
 
@@ -353,7 +357,7 @@ def update_items_route(id):
                 updatewriter.writerow("")
                 updatewriter.writerow(["ROUTE: /update_items/"])
         
-                updatewriter.writerow(["Update GroceriesITEMS ORIG ROW", 
+                updatewriter.writerow(["Update GroceriesITEMS ORIG ROW",
                     item.storeName,
                     item.storeCategory,
                     item.storeItem,
@@ -361,7 +365,7 @@ def update_items_route(id):
                     item.myItem,
                     item.price
                     ])
-                updatewriter.writerow(["Update GroceriesITEMS UPDATED ROW", 
+                updatewriter.writerow(["Update GroceriesITEMS UPDATED ROW",
                     request.form['updated_storeName'],
                     request.form['updated_storeItem'],
                     request.form['updated_myCategory'],
@@ -402,34 +406,26 @@ def update_temp_item_route(id):
                 updatewriter.writerow("")
                 updatewriter.writerow(["ROUTE: /update_items_temp_db/"])
         
-                updatewriter.writerow(["Update GroceriesITEMS ORIG ROW", 
-                    item.storeName,
+                updatewriter.writerow(["Update GroceriesITEMS ORIG ROW",
                     item.storeCategory,
                     item.storeItem,
                     item.myCategory,
                     item.myItem,
                     item.price
                     ])
-                updatewriter.writerow(["Update GroceriesITEMS UPDATED ROW", 
-                    request.form['updated_storeName'],
+                updatewriter.writerow(["Update GroceriesITEMS UPDATED ROW",
                     request.form['updated_storeItem'],
                     request.form['updated_myCategory'],
                     request.form['updated_myItem'],
                     uts.convert_price(request.form['updated_price'])])           
 
-        item.storeName = request.form['updated_storeName']
         item.storeCategory = request.form['updated_storeCategory']
         item.storeItem = request.form['updated_storeItem']
         item.myCategory = request.form['updated_myCategory']
         item.myItem = request.form['updated_myItem']
         item.price = uts.convert_price(request.form['updated_price'])
         
-        new_date = uts.convert_date(request.form['updated_date'])
-        new_date = uts.convert_date_to_format(new_date)
 
-        if item.recepitDate.date() > new_date:
-            item.recepitDate = new_date
-        
         try:
             db.session.commit()
             return redirect('/last_upload/')
@@ -473,11 +469,31 @@ def items():
 @app.route('/last_upload/')
 def last_upload():
     """Show items from last upload."""
-    temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
+    temp_items = Grocery_TEMP_Items.query.all()
     filename = uts.get_filename() if temp_items else ''
+    curr_date = uts.get_date_from_db().date() if temp_items else ''
+    total_price = uts.get_totalprice_from_db()
     return render_template('Items_temp.html',
-                           current_date=uts.get_date_from_db().date(),
+                           total_price=total_price,
+                           current_date=curr_date,
                            filename=filename, tasks=temp_items)
+
+
+@app.route('/last_upload_view2/')
+def last_upload_view2():
+    """Show items from last upload."""
+    temp_items = Grocery_TEMP_Items.query.all()
+    filename = uts.get_filename() if temp_items else ''
+    curr_date = uts.get_date_from_db().date() if temp_items else ''
+    total_price = uts.get_totalprice_from_db()
+    return render_template('Items_temp_view2.html',
+                           total_price=total_price,
+                           current_date=curr_date,
+                           filename=filename, tasks=temp_items)
+
+
+
+
 
 @app.route('/display/<filename>')
 def display_image(filename):
@@ -562,10 +578,14 @@ def change_recepit_date():
         db.session.commit()
     else:
         flash("Date Field is empty")
+
+    total_price = uts.get_totalprice_from_db()
+    filename = uts.get_filename()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     return render_template('Items_temp.html',
+                           total_price = total_price,
                            current_date=uts.get_date_from_db().date(),
-                           filename=uts.get_filename(), tasks=temp_items)
+                           filename=filename, tasks=temp_items)
 
 
 
@@ -608,7 +628,7 @@ def upload():
     print(f"\nUploaded: {filename}")
     flash(f"Uploaded: {filename}")
     
-    bought_once, frequent_items = uts.process_uploaded_file(file_path, store, filename, "", False)
+    bought_once, frequent_items, total_price = uts.process_uploaded_file(file_path, store, filename, "", False)
     
     if bought_once:
         flash(f"{len(bought_once)} items bought once before")
@@ -623,16 +643,14 @@ def upload():
 
     #uts.uploaded_items_to_ai()
 
-
     current_date = uts.get_date_from_db().date()
     today_date = uts.convert_date(date.today())
     show_date_warning = (current_date == today_date)
-    print(f"current_date: {current_date} \ntoday_date: {today_date} \nif statement is {show_date_warning}")
-
-
+    #print(f"current_date: {current_date} \ntoday_date: {today_date} \nif statement is {show_date_warning}")
 
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
     return render_template('Items_temp.html',
                            current_date=current_date,
+                           total_price = total_price,
                            show_date_warning=show_date_warning,
                            filename=filename, tasks=temp_items)

@@ -1,208 +1,14 @@
 {% extends 'base.html' %}
 
+
 {% block header %}
-    <style>
-        .date-warning-modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-
-        .date-warning-content {
-            background-color: #fff;
-            margin: 15% auto;
-            padding: 30px;
-            border: 3px solid #ffc107;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-
-        .date-warning-content h2 {
-            color: #856404;
-            margin-top: 0;
-        }
-
-        .date-warning-content p {
-            font-size: 16px;
-            margin: 20px 0;
-        }
-
-        .warning-close-btn {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 20px;
-        }
-
-        .warning-close-btn:hover {
-            color: #000;
-        }
-    </style>
-    
+    <script src="{{ url_for('static', filename='js/grocery_common.js') }}"></script>
     <script>
-        let lastCheckedIndex = null;
-        
-        function save_item() {
-            window.location.href = "/save_grocery_item/";
-        }
-        
-        function delete_n_upload() {
-            window.location.href = "/delete_all_Grocery_TEMP_Items/";
-        }    
-
-        function guessLabelForNewItems() {
-            window.location.href = "/guess_label_for_new_items/";
-        }
-
-         function fake_populate_all() {
-            window.location.href = "/fake_populate_all/";
-        }
-
-        function lastUpload() {
-            window.location.href = "/last_upload/";
-        }        
-        
-        function updateDate() {
-            window.location.href = "/update_date/";
-        }
-        
-        function deleteSelected() { /*deleteSelected code was written by Claud AI*/
-            const checkboxes = document.querySelectorAll('input[name="item_ids"]:checked');
-            if (checkboxes.length === 0) {
-                alert('Please select at least one item to delete');
-                return;
-            }
-            
-            const ids = Array.from(checkboxes).map(cb => cb.value);
-            const confirmation = confirm(`Are you sure you want to delete ${ids.length} item(s)?`);
-            
-            if (confirmation) {
-                // Create a form and submit
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/delete_multiple_items_TempDB/';
-                
-                ids.forEach(id => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'item_ids';
-                    input.value = id;
-                    form.appendChild(input);
-                });
-                
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-        
-        function toggleAll(source) {
-            const checkboxes = document.querySelectorAll('input[name="item_ids"]');
-            checkboxes.forEach(cb => cb.checked = source.checked);
-            lastCheckedIndex = null;
-        }
-        
-        function handleCheckboxClick(event, currentIndex) {
-            const checkboxes = document.querySelectorAll('input[name="item_ids"]');
-            
-            if (event.shiftKey && lastCheckedIndex !== null) {
-                // Determine range
-                const start = Math.min(lastCheckedIndex, currentIndex);
-                const end = Math.max(lastCheckedIndex, currentIndex);
-                
-                // Check all checkboxes in range
-                const isChecked = checkboxes[currentIndex].checked;
-                for (let i = start; i <= end; i++) {
-                    checkboxes[i].checked = isChecked;
-                }
-            }
-            
-            lastCheckedIndex = currentIndex;
-        }
-
-		function openImageModal() {
-            const modal = document.getElementById("receiptModal");
-            const container = document.getElementById("modalContainer");
-            modal.style.display = "block";
-            // Reset position when opening
-            container.style.left = '0px';
-            container.style.top = '0px';
-        }
-
-        function closeImageModal() {
-            document.getElementById("receiptModal").style.display = "none";
-        }
-
-        function closeDateWarning() {
-            document.getElementById('dateWarningModal').style.display = 'none';
-        }
-
-        // Panning functionality
-        let isDragging = false;
-        let startX, startY;
-
         document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById("receiptModal");
-            const container = document.getElementById("modalContainer");
-            const closeBtn = document.getElementById("closeBtn");
-
-            modal.addEventListener('mousedown', function(e) {
-                if (e.target === closeBtn) return;
-                isDragging = true;
-                modal.classList.add('grabbing');
-                startX = e.pageX - container.offsetLeft;
-                startY = e.pageY - container.offsetTop;
-            });
-
-            modal.addEventListener('mousemove', function(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                const x = e.pageX - startX;
-                const y = e.pageY - startY;
-                container.style.left = x + 'px';
-                container.style.top = y + 'px';
-            });
-
-            modal.addEventListener('mouseup', function() {
-                isDragging = false;
-                modal.classList.remove('grabbing');
-            });
-
-            modal.addEventListener('mouseleave', function() {
-                isDragging = false;
-                modal.classList.remove('grabbing');
-            });
-
-            // Close on ESC key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && modal.style.display === 'block') {
-                    closeImageModal();
-                }
-            });
-
-            // Show date warning modal if needed
             {% if show_date_warning %}
                 document.getElementById('dateWarningModal').style.display = 'block';
             {% endif %}
         });
-
-        // Close date warning when clicking outside
-        window.onclick = function(event) {
-            var modal = document.getElementById('dateWarningModal');
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
-        }
-	
     </script>
 {% endblock %}
 
@@ -225,7 +31,7 @@
     <div class="container">
         <div class="row">
             {% if filename %}
-				<div align="center">
+				<div>
 						<img id="mainReceipt" 
                          class="zoom-img"
                          src="{{ url_for('display_image', filename=filename) }}" 
@@ -259,7 +65,7 @@
         </div>
     </div>
 	
-	
+    <h4 style="text-align: center"> The total price is {{total_price}}  </h4>
 
     <div class="container">
         <div class="row">
@@ -289,12 +95,13 @@
             <button class="nice-button_lightred" onclick="deleteSelected()">Delete Selected</button>
             <br><br>
             <button class="nice-button-green"  onclick="fake_populate_all()">fake_populate_all</button>
+            <br><br>
         </div>
 
 
-        <h4 style="text-align: center">Change the Date!</h4>
+
             <form align="center" method="post" action="/change_recepit_date/" enctype="multipart/form-data">
-                <input type="submit" value="change the date" class="btn btn-info">
+                <input type="submit" value="change the date" class="btn btn-info"><br>
                 <input type="date" name="recepitDate" id="recepitDate"
                        value="{{current_date}}"
                        style="{% if show_date_warning %}border: 3px solid #ffc107; background-color: #fff9e6;{% endif %}">
@@ -304,7 +111,7 @@
                 <br><br>
             </form>
 
-        <table>
+        <TABLE>
             <tr>
                 <th><input type="checkbox" onclick="toggleAll(this)" title="Select All"></th>
                 <th>ID</th>  

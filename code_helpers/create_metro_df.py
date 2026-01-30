@@ -5,7 +5,8 @@ from code_helpers.levenshtein_distance import levenshtein_distance
 
 
 def create_metro_df(text_list, VERBOSE):
-    
+    import os
+    from app import app
     import utils as uts
     from config import Config
     
@@ -161,9 +162,15 @@ def create_metro_df(text_list, VERBOSE):
     
     df_cln = df_receipt[df_receipt['SAV']==0]
     df_cln = df_cln[df_cln['TOTAL']==0]
-   
-    df_cln[df_cln['LEN']<7].shape[0]==df_cln.shape[0]
-    
+
+    df_sortorder = df_cln.reset_index()
+    df_sortorder["sort_order"] = df_sortorder["index"] + 1
+
+    my_file = os.path.join(app.config['OUTPUT_FOLDER'], 'sortorder_df.csv')
+    df_sortorder[[
+        "CAT", "CAT_MATCH", "item", "sort_order"
+    ]].to_csv(my_file, index=False)
+
     if CM_PRNSTMT: print("End of Create_metro_df:")
     return df_receipt, df_cln, df_lev
 

@@ -170,7 +170,7 @@ def add_grocery_item(item_data):
 
 def bulk_add_grocery_item(temp_items):
     # Calculate totals and create main receipt record
-    total_price = sum_price_list([item.price for item in temp_items])
+    total_price = sum([item.price for item in temp_items])
     store_name = temp_items[0].storeName
 
     temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
@@ -258,6 +258,16 @@ def get_date_from_db():
     ).scalar()
     return convert_date(result)
 
+def get_totalprice_from_db():
+    """Get the total price from Grocery_TEMP."""
+    from database import db
+    #Get the first item's date
+    result = db.session.execute(
+        select(Grocery_TEMP_Items.price)
+    ).scalars().all()
+
+    total_price =sum(result)
+    return total_price
 
 # OCR and Text Processing
 def process_receipt_text(image_path, store, filename):
@@ -355,10 +365,9 @@ def get_upload_date_from_OCRText():
 
 
 def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process):
-
+    import pandas as pd
     # Process receipt
     raw_text, new_rows, total_price = process_receipt_text(file_path, store, filename)
-    
     # Clear temp table and save OCR result
     Grocery_TEMP_Items.query.delete()
     db.session.commit()
@@ -368,8 +377,17 @@ def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process
         writer = csv.writer(csvfile)
         writer.writerow([receipt_date, filename, store, raw_text])
 
-    receipt_date = get_upload_date_from_OCRText()
-    receipt_date = convert_date(receipt_date)
+    # temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'temp.txt')
+    # with open(temp_ocr, 'w', newline='') as csvfile:
+    #     writer = csv.writer(csvfile)
+    #     writer.writerow([new_rows])
+
+    df_sortorder = pd.read_csv(os.path.join(app.config['OUTPUT_FOLDER'], 'sortorder_df.csv'))
+    item_to_sort = {row['item']: row['sort_order'] for _, row in df_sortorder.iterrows() if row['CAT'] == 'ITEM'}
+    sorted_items = sorted(new_rows, key=lambda x: item_to_sort.get(x[1], 9999))
+    new_rows = sorted_items
+
+    receipt_date = convert_date(get_upload_date_from_OCRText())
 
     # Add items to Grocery_TEMP_Items table
     for item in new_rows:
@@ -387,7 +405,7 @@ def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process
     
     # Attempt to label items automatically
     bought_once, frequent_items = guess_labels(Config.VERBOSE)
-    return bought_once, frequent_items
+    return bought_once, frequent_items, total_price
 
 
 def guess_labels(VERBOSE):

@@ -37,7 +37,7 @@ def bulk_upload_qa():
 
         if current_date == today_date:
             user_input = input("The receipt date was automattically set to today's date. If this is correct please say YES\n")
-            if user_input != 'YES':
+            if user_input.upper != 'YES':
                 continue  # Restart the process
 
         #used the website to save the table
