@@ -78,8 +78,16 @@ function openImageModal() {
     const modal = document.getElementById("receiptModal");
     const container = document.getElementById("modalContainer");
     modal.style.display = "block";
-    container.style.left = '0px';
-    container.style.top = '0px';
+
+    // Center the container initially
+    // Calculate center position: (viewport dimension - container dimension) / 2
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Position at center (accounting for the container being larger than viewport)
+    container.style.left = '50%';
+    container.style.top = '50%';
+    container.style.transform = 'translate(-50%, -50%)';
 }
 
 function closeImageModal() {

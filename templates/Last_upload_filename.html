@@ -1,0 +1,19 @@
+
+
+
+    <div class="container" style="text-align: center;">
+        <div class="row">
+            {% if filename %}
+				<div>
+						<img id="mainReceipt"
+                         class="zoom-img"
+                         src="{{ url_for('display_image', filename=filename) }}"
+                         width="{{ img_width|default(500) }}"
+                         height="{{ img_height|default(600) }}"
+                         onclick="openImageModal()">
+					<p> Click image to enlarge </p>
+                    <br><br>
+                </div>
+            {% endif %}
+        </div>
+    </div>

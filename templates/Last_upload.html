@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+
+{% block header %}
+    <script src="{{ url_for('static', filename='js/grocery_common.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if show_date_warning %}
+                document.getElementById('dateWarningModal').style.display = 'block';
+            {% endif %}
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+    <p><h1 align="center">TEMP<br>Items Database</h1></p>
+
+
+    {% set img_width = 50 %}
+    {% set img_height = 60 %}
+
+    {% include 'Last_upload_header.html' %}
+    {% include 'Last_upload_filename.html' %}
+    {% include 'Last_upload_middleButtons.html' %}
+        <h4 style="text-align: center"> The total price is {{total_price}}  </h4>
+
+        <TABLE>
+            <tr>
+                <th><input type="checkbox" onclick="toggleAll(this)" title="Select All"></th>
+                <th>ID</th>  
+                <th>Filename</th>        
+                <th>Store Name</th>
+                <th>Store Category</th>
+                <th>Store Item</th>
+                <th>My Category</th>
+                <th>My Item</th>			
+                <th>Price</th>
+                <th>Date on Receipt</th>                
+                <th>DateTime on Receipt</th>                
+                <th>Actions</th>
+            </tr>
+            {% for task in tasks %}
+                <tr>
+                    <td><input type="checkbox" name="item_ids" value="{{task.id}}" onclick="handleCheckboxClick(event, {{loop.index0}})"></td>
+                    <th>{{task.id}}</th>
+                    <th>{{task.filename}}</th>            
+                    <td>{{ task.storeName }}</td>
+                    <td>{{ task.storeCategory }}</td>                
+                    <td>{{ task.storeItem }}</td>
+                    <td>{{ task.myCategory }}</td>
+                    <td>{{ task.myItem }}</td>
+                    <td>${{ "%.2f"|format(task.price) }}</td>
+                    <td>{{ task.recepitDate.date().strftime('%Y-%m-%d') }}</td>
+                    <td>{{ task.recepitDate.time().strftime("%H:%M:%S") }}</td>
+                    <td>
+                        <a href="/delete_temp_item/{{task.id}}">Delete</a>
+                        <br>
+                        <a href="/update_items_temp_db/{{task.id}}">Update</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+
+    <br>
+    <hr>
+    <hr>
+    <br>
+
+    {% include 'Last_upload_footer.html' %}
+
+{% endblock %}

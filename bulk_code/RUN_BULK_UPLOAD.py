@@ -10,8 +10,8 @@ import logging
 from bulk_code.bulk_upload import bulk_upload
 from config import Config
 
-PATH = r'\receipts\bulk_upload_all\wip'
-#PATH = r'\receipts\bulk_upload_all'
+#PATH = r'\receipts\bulk_upload_all\wip'
+PATH = r'\receipts\bulk_upload_all'
 BASE = r'C:\Users\after\OneDrive\Desktop\code_from_HD\Groceries\Groceries\FLASK\final_versions'
 thisStore = "Metro"
 

@@ -139,10 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Show date warning modal if needed
-    {% if show_date_warning %}
-        document.getElementById('dateWarningModal').style.display = 'block';
-    {% endif %}
 });
 
 // Close date warning when clicking outside

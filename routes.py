@@ -35,7 +35,7 @@ def fake_populate_all():
     flash(f"DUMMY Values Populated")
     filename = uts.get_filename()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Items_temp.html',
+    return render_template('Last_upload.html',
                            total_price = total_price,
                            current_date=uts.get_date_from_db().date(),
                            filename=filename, tasks=temp_items)
@@ -89,7 +89,7 @@ def guess_label_for_new_items():
     filename = uts.get_filename()
     total_price = uts.get_totalprice_from_db()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Items_temp.html',
+    return render_template('Last_upload.html',
                            total_price = total_price,
                            current_date=uts.get_date_from_db().date(),
                            filename=filename, tasks=temp_items)
@@ -208,7 +208,7 @@ def manual_add_receipt():
 def delete_multiple_items_TempDB():
     """Delete multiple temp items from the database."""
     item_ids = request.form.getlist('item_ids')
-    
+    item_list = []
     if not item_ids:
         flash('No items selected for deletion', 'warning')
         return redirect('/items_temp/')
@@ -218,14 +218,16 @@ def delete_multiple_items_TempDB():
         deleted_count = 0
         for item_id in item_ids:
             item = Grocery_TEMP_Items.query.get(int(item_id))
+            item_list.append(item.myItem)
             if item:
                 db.session.delete(item)
                 deleted_count += 1
         
         # Commit all deletions at once
         db.session.commit()
-        flash(f'Successfully deleted {deleted_count} item(s)', 'success')
-        
+        for deleted_item in item_list:
+            flash(f'Successfully deleted {deleted_item} ', 'success')
+
     except ValueError:
         db.session.rollback()
         flash('Invalid item ID format', 'error')
@@ -473,7 +475,7 @@ def last_upload():
     filename = uts.get_filename() if temp_items else ''
     curr_date = uts.get_date_from_db().date() if temp_items else ''
     total_price = uts.get_totalprice_from_db()
-    return render_template('Items_temp.html',
+    return render_template('Last_upload.html',
                            total_price=total_price,
                            current_date=curr_date,
                            filename=filename, tasks=temp_items)
@@ -486,7 +488,7 @@ def last_upload_view2():
     filename = uts.get_filename() if temp_items else ''
     curr_date = uts.get_date_from_db().date() if temp_items else ''
     total_price = uts.get_totalprice_from_db()
-    return render_template('Items_temp_view2.html',
+    return render_template('Last_upload__side_by_side.html',
                            total_price=total_price,
                            current_date=curr_date,
                            filename=filename, tasks=temp_items)
@@ -582,7 +584,7 @@ def change_recepit_date():
     total_price = uts.get_totalprice_from_db()
     filename = uts.get_filename()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Items_temp.html',
+    return render_template('Last_upload.html',
                            total_price = total_price,
                            current_date=uts.get_date_from_db().date(),
                            filename=filename, tasks=temp_items)
@@ -649,7 +651,7 @@ def upload():
     #print(f"current_date: {current_date} \ntoday_date: {today_date} \nif statement is {show_date_warning}")
 
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Items_temp.html',
+    return render_template('Last_upload.html',
                            current_date=current_date,
                            total_price = total_price,
                            show_date_warning=show_date_warning,

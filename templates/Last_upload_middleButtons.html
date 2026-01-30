@@ -1,0 +1,25 @@
+
+
+    <div class="content">
+        {% if tasks|length < 1 %}
+            <h4 style="text-align: center">There are no uploaded receipts. Upload a new receipt!</h4>
+        {% else %}
+
+            <div class="container" align="center">
+                <button class="nice-button_lightgreen" onclick="guessLabelForNewItems()">Guess for New Items!</button>
+                <button class="nice-button_lightred" onclick="deleteSelected()">Delete Selected</button>
+                <button class="nice-button_fake"  onclick="fake_populate_all()">fake_populate_all</button>
+            </div>
+
+            <form align="center" method="post" action="/change_recepit_date/" enctype="multipart/form-data">
+                <input type="submit" value="change the date" class="btn btn-info"><br>
+                <input type="date" name="recepitDate" id="recepitDate"
+                       value="{{current_date}}"
+                       style="{% if show_date_warning %}border: 3px solid #ffc107; background-color: #fff9e6;{% endif %}">
+                {% if show_date_warning %}
+                    <span style="color: #ff9800; font-size: 18px; margin-left: 10px;" title="Auto-filled with today's date">⚠️</span>
+                {% endif %}
+                <br><br>
+            </form>
+        {% endif %} <!---if tasks|length--->
+</div> <!---class="content"--->

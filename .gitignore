@@ -5,8 +5,7 @@
 static/uploads/
 groceries.db
 ai/AskedGoogleGemini/*.json
-
-
+/templates/archive/
 
 
 # Byte-compiled / optimized / DLL files
