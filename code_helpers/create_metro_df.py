@@ -4,16 +4,14 @@ import pandas as pd
 from code_helpers.levenshtein_distance import levenshtein_distance
 
 
-def create_metro_df(text_list, VERBOSE):
+def create_metro_df(text_list, log, VERBOSE):
     import os
     from app import app
     import utils as uts
     from config import Config
     
     if VERBOSE:
-        CM_PRNSTMT = True
-    else:
-        CM_PRNSTMT = False
+        uts.print_log('create_metro_df', log, header=True, footer=False)
 
     metro_headings = Config.METRO_CATEGORY
     subtotal_list = Config.SUBTOTALS
@@ -28,11 +26,12 @@ def create_metro_df(text_list, VERBOSE):
     cln_txt = []
     a, b, c = [],[],[]
 
-    if CM_PRNSTMT: print("Start create_metro_df. Number of Items Received: ", len(text_list))
+    if VERBOSE:
+        uts.print_log(f"Number of Items Received: {len(text_list)}" , log, header=False, footer=False)
 
     for text in text_list:    
         text = re.sub(r'[?|$|:|*|!]',r'',text).strip()
-        if CM_PRNSTMT: print("\nstep one - the token is: ", text)
+        #print("\nstep one - the token is: ", text)
 
         if text.split('.')[0] =='COMM':
             text ='BAKERY'
@@ -45,11 +44,11 @@ def create_metro_df(text_list, VERBOSE):
         col_length.append(col_len)
         cln_txt.append(text)
         
-        if CM_PRNSTMT: print(">> step two: ", text, col_len == 1 , len(text)==1, col_len, len(text))
+        #print(">> step two: ", text, col_len == 1 , len(text)==1, col_len, len(text))
         
         if col_len == 1 or len(text)==1:
             lev_arr = []
-            if CM_PRNSTMT: print(">>> step three (len=1): ", text)
+            #print(">>> step three (len=1): ", text)
             for head in metro_headings:
                 dis = levenshtein_distance(text, head)
                 lev_arr.append(dis)
@@ -66,7 +65,7 @@ def create_metro_df(text_list, VERBOSE):
             if head_dis < 5:
                 distance.append(head_dis)
                 header_lst.append("STORE_CATEGORY")
-                if CM_PRNSTMT: print("!FOUND CAT:", text, header)  
+                #print("!FOUND CAT:", text, header)
                 h_found.append(header)
 
             else:
@@ -110,7 +109,6 @@ def create_metro_df(text_list, VERBOSE):
         "lev": c
     })
         
-   
     # Condition to flag rows (e.g., values greater than 3 in column 'A')
     flag_condition = df['TOTAL'] == 1
     
@@ -129,15 +127,14 @@ def create_metro_df(text_list, VERBOSE):
             item = ' '.join(t[0:len(t)-1])
             price_arr.append(price)
             item_arr.append(item) 
-            if CM_PRNSTMT: print("ORIG: DIGIT: ", t)
+            #print("ORIG: DIGIT: ", t)
         else:
             price = 0.0
             item = row
             price_arr.append(price)
             item_arr.append(item)
-            if CM_PRNSTMT: print("ORIG: ELSE: ", t)
+            #print("ORIG: ELSE: ", t)
 
-    
     df_receipt.loc[:, 'price'] = price_arr
     df_receipt.loc[:, 'item'] = item_arr
     
@@ -156,7 +153,6 @@ def create_metro_df(text_list, VERBOSE):
             item_arr.append(item)
             weight_arr.append(0)
     
-   
     df_receipt.loc[:, 'produce_cost'] = weight_arr
     df_receipt.loc[:, 'itemCLN'] = item_arr
     
@@ -171,7 +167,7 @@ def create_metro_df(text_list, VERBOSE):
         "CAT", "CAT_MATCH", "item", "sort_order"
     ]].to_csv(my_file, index=False)
 
-    if CM_PRNSTMT: print("End of Create_metro_df:")
+    if VERBOSE: uts.print_log('create_metro_df', log, header=False, footer=True)
     return df_receipt, df_cln, df_lev
 
 #########################################################################

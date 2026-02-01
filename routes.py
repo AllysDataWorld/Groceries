@@ -22,7 +22,7 @@ def fake_populate_all():
     total_price = uts.get_totalprice_from_db()
 
     for row_num, temp_item in enumerate(unlabeled_items):
-        clean_item = uts.clean_produce(temp_item.storeItem)
+        clean_item = uts.clean_produce(temp_item.storeItem) #BUG: assumes every item is a PRODUCE. Fixed in other clean_produce calls
 
         temp_item.myItem = "myItem"
         temp_item.myCategory = 'myCategory'
@@ -42,50 +42,63 @@ def fake_populate_all():
 
 
 
-
-
-
 @app.route('/guess_label_for_new_items/')
 def guess_label_for_new_items():
     """Use Levenshtein distance to guess labels for new items."""
-    
     new_matches = {}
-    
-    all_items = uts.find_store_item_matches("")  # Get all items
+
     unlabeled_items = uts.get_unlabeled_items()
-    
-    for row_num, temp_item in enumerate(unlabeled_items):
-        clean_item = uts.clean_produce(temp_item.storeItem)
-        logger.info(f"Finding match for item {row_num}: {clean_item}")
-        
-        distances = {}
-        for grocery_item in all_items:
-            clean_grocery = uts.clean_produce(grocery_item.storeItem)
-            distance = levenshtein_distance(clean_item, clean_grocery)
-            distances[distance] = (clean_grocery, grocery_item)
-        
-        if distances:
-            min_distance = min(distances.keys())
-            logger.info(f"Best match distance: {min_distance}")
-            
-            if min_distance < 10:  # Threshold for acceptable match
-                best_match = distances[min_distance][1]
-                temp_item.myItem = best_match.myItem
-                temp_item.myCategory = best_match.myCategory
-                new_matches[clean_item] = best_match.myItem
-                
-                try:
-                    db.session.commit()
-                except Exception as e:
-                    db.session.rollback()
-                    logger.error(f"Error updating item: {e}")
-    
-    # Display results
-    if new_matches:
-        flash(f"{len(new_matches)} new items matched")
-        for original, matched in new_matches.items():
-            flash(f"{original} → {matched}")
-    
+    if len(unlabeled_items) > 0:
+
+        all_items = uts.find_store_item_matches("")  # Get all items from DB
+
+        if uts.get_VERBOSE():
+            print(f'Comparing against {len(all_items)} items in Grocery_Items DB')
+            print(f'List of {len(unlabeled_items)} unlabeled_items from Grocery_TEMP_Items DB\n')
+
+        for row_num, temp_item in enumerate(unlabeled_items):
+            if temp_item.storeCategory == "PRODUCE":
+                clean_item = uts.clean_produce(temp_item.storeItem)
+                if uts.get_VERBOSE(): print(f"{temp_item.storeCategory}: {temp_item.storeItem} --> Update to {clean_item}")
+            else:
+                clean_item = temp_item.storeItem
+
+
+            distances = {}
+            for grocery_item in all_items:
+                if grocery_item.storeCategory == "PRODUCE":
+                    clean_grocery = uts.clean_produce(grocery_item.storeItem)
+                else:
+                    clean_grocery = grocery_item.storeItem
+                distance = levenshtein_distance(clean_item, clean_grocery)
+                distances[distance] = (clean_grocery, grocery_item)
+
+            if distances:
+                min_distance = min(distances.keys())
+                logger.info(f"Best match distance: {min_distance}")
+
+                if min_distance < 10:  # Threshold for acceptable match
+                    best_match = distances[min_distance][1]
+                    temp_item.myItem = best_match.myItem
+                    temp_item.myCategory = best_match.myCategory
+                    new_matches[clean_item] = best_match.myItem
+
+                    try:
+                        db.session.commit()
+                    except Exception as e:
+                        db.session.rollback()
+                        logger.error(f"Error updating item: {e}")
+
+        # Display results
+        print("new_matches", type(new_matches), new_matches)
+        if new_matches:
+            flash(f"Guessed for {len(new_matches)} new items")
+            for original, matched in new_matches.items():
+                flash(f"{original} guessed {matched}")
+
+    else:
+        print("no unlabeled items")
+        flash("There are no items with blank 'My_Category' or 'My_Item' ")
     filename = uts.get_filename()
     total_price = uts.get_totalprice_from_db()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
@@ -519,7 +532,6 @@ def export_distinct_items():
     """ MODULE written by Claud
         Export distinct items from Grocery_Items to CSV."""
     try:
-      
        # Get distinct combinations of all fields
         distinct_items = db.session.query(
             Grocery_Items.storeName,
@@ -617,8 +629,10 @@ def upload():
     if not (file and uts.allowed_file(file.filename)):
         flash('Invalid file type')
         return redirect(request.url)
-    
+
+    ######################
     # Process upload
+    ######################
     filename = secure_filename(file.filename)
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(file_path)
@@ -643,7 +657,7 @@ def upload():
         for count, item in frequent_items.items():
             flash(f"{item} bought {count} times before")
 
-    #uts.uploaded_items_to_ai()
+    #uts.uploaded_items_to_ai() #wrong place for this code... if its used
 
     current_date = uts.get_date_from_db().date()
     today_date = uts.convert_date(date.today())

@@ -29,7 +29,7 @@ pytesseract.tesseract_cmd =  Config.TESSERACT_CMD
 VERBOSE = Config.VERBOSE
 thisDate = "" 
 
-def print_n_log(mystr, logger):
+def print_n_log(mystr, logger): #See print_log in utils
     logger.info(mystr)                        
     print(mystr)                        
 

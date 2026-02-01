@@ -5,6 +5,8 @@ warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 import pandas as pd
 from code_helpers.create_metro_df import create_metro_df
+import utils as uts
+
 from config import Config
 
 def convert_to_int(num):
@@ -21,16 +23,11 @@ def convert_to_int(num):
 
 def parse_process_df(text_list, log, VERBOSE):
     if VERBOSE:
-        PPDF_PRNSTMT = True
-        log.info("\nstart parse_process_df:\n")
-        print("\nstart parse_process_df:\n")
-        
-    else:
-        PPDF_PRNSTMT = False    
+        uts.print_log('parse_process_df', log, header=True, footer=False)
 
     insert_row = []
 
-    df_orig, df, df_debug = create_metro_df(text_list, VERBOSE)
+    df_orig, df, df_debug = create_metro_df(text_list, log, VERBOSE)
     df = df.reset_index()
     
     #Create DF_CAT:
@@ -42,43 +39,38 @@ def parse_process_df(text_list, log, VERBOSE):
     if df_cat.iloc[-1,-1]==0 and df_cat.shape[0]>0:
         df_cat.iloc[-1,-1] = df.shape[0]
 
+    if VERBOSE:
+        uts.print_log(f"\ndf:{df.shape}, \n{df.columns} \n{df.head()}",
+                      log, header=False, footer=False)
 
-    if PPDF_PRNSTMT: 
-        print(f"\ndf: {df}")
-        print(f"\ndf_cat: {df_cat}")
-
-        log.info(f"df:\n {df}\n-----\n")
-        log.info(f"df_cat:\n {df_cat}\n-----\n")
-        log.info(f"df_debug:\n {df_debug}\n-----\n")
-    
-    
+    #################################
     #Create Produce_DF and OTHER_DF
+    #################################
     produce_index = 0
     for index, row in df_cat.iterrows():
         if row['CAT'] == "STORE_CATEGORY" and row['item'] == 'PRODUCE':
             produce_index=row
             break
     
-    if PPDF_PRNSTMT: print(f"produce_index: {produce_index}")
+    if VERBOSE:
+        uts.print_log(f"produce_index: {produce_index}", log, header=False, footer=False)
+
     if isinstance(produce_index, int):
         other_df = df
     else:
         strt = convert_to_int(produce_index.Produce_start)
         stp = convert_to_int(produce_index.Produce_stop)
-        if PPDF_PRNSTMT:print("qa: Produce start:", strt)
-        if PPDF_PRNSTMT:print("qa Produce Stop:", stp)
+        if VERBOSE:uts.print_log(f"Produce start:{strt} and stop:{stp}", log, header=False, footer=False)
     
         produce_df = df.iloc [strt+1:stp, :] #remove the first row
         before = df.iloc[:strt, :]
         after = df.iloc[stp:, :]
         other_df = pd.concat([before, after])
-  
-        if PPDF_PRNSTMT:
-            print(f"\nproduce_df {produce_df.columns} \n: {produce_df}")
-            print(f"\nother_df: {other_df.columns} \n {other_df}")
-            log.info(f"produce_df:{produce_df.columns}\n {produce_df}\n-----\n")
-            log.info(f"other_df:{other_df.columns}\n {other_df}\n-----\n")
-        
+
+        if VERBOSE:
+            uts.print_log(f"\nproduce_df {produce_df.columns} \n: {produce_df} \nother_df {other_df.columns} \n: {other_df}",
+                          log, header=False, footer=False)
+
         price_idx = produce_df.columns.get_loc("price")  
         da_item = produce_df.item.to_list()
         
@@ -95,14 +87,15 @@ def parse_process_df(text_list, log, VERBOSE):
                 da_item[i] = 0
                 da_item[i-1] = 0
                 
-                if PPDF_PRNSTMT:
-                    print("Item Found: PRODUCE", item,"------->", price)
-                    log.info("Item Found:" + str(item) + str(price))
-    
+                if VERBOSE:
+                    uts.print_log(
+                        f"Item Found: PRODUCE:{item}-->{price}",
+                        log, header=False, footer=False)
+
                 insert_row.append(("PRODUCE", item, price))
             else:
                 pass
-                #if PPDF_PRNSTMT: print("ELS:", i, cost, produce_df.iloc[i,-3])
+                #if VERBOSE: print("ELS:", i, cost, produce_df.iloc[i,-3])
         
                
         produce_extra_items = [("PRODUCE", k, produce_df.iloc[i,price_idx]) for i,k in enumerate(da_item) if k!=0]
@@ -118,14 +111,13 @@ def parse_process_df(text_list, log, VERBOSE):
             category= row['CAT_MATCH']
         else:
             insert_row.append((category, row['item'], row['price']))
-            if PPDF_PRNSTMT: print("THIS?insert_row:", category, row['item'] ,"------->", row['price'])
+            if VERBOSE: print("insert_row:", category, row['item'] ,"------->", row['price'])
             log.info("insert_row:" + str(category) + str(row['item']) +"------->"+ str(row['price']))
 
 
-    if PPDF_PRNSTMT:
-        log.info("\n end parse_process_df:\n")
-        print("-------------\n", insert_row, ": insert_row")
-        print("\n end parse_process_df:\n")
+    if VERBOSE:
+        uts.print_log(f'final output:{insert_row}', log, header=False, footer=False)
+        uts.print_log('parse_process_df', log, header=False, footer=True)
   
     total = 0.0
     for row in insert_row:

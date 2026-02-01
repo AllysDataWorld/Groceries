@@ -84,6 +84,11 @@ def get_upload_items():
     upload_date = get_upload_date()
     return list_of_items, upload_date
 
+def get_VERBOSE():
+    #used in route /guess_label_for_new_items/ because I dont want to pass a parameter
+    return Config.VERBOSE
+
+
 def sum_price_list(price_list):
     """Calculate sum of prices in list."""
     return sum(convert_price(price) for price in price_list)
@@ -368,7 +373,7 @@ def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process
     import pandas as pd
     # Process receipt
     raw_text, new_rows, total_price = process_receipt_text(file_path, store, filename)
-    # Clear temp table and save OCR result
+
     Grocery_TEMP_Items.query.delete()
     db.session.commit()
 
@@ -376,11 +381,6 @@ def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process
     with open(temp_ocr, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow([receipt_date, filename, store, raw_text])
-
-    # temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'temp.txt')
-    # with open(temp_ocr, 'w', newline='') as csvfile:
-    #     writer = csv.writer(csvfile)
-    #     writer.writerow([new_rows])
 
     df_sortorder = pd.read_csv(os.path.join(app.config['OUTPUT_FOLDER'], 'sortorder_df.csv'))
     item_to_sort = {row['item']: row['sort_order'] for _, row in df_sortorder.iterrows() if row['CAT'] == 'ITEM'}
@@ -404,33 +404,58 @@ def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process
         add_temp_item(item_data)
     
     # Attempt to label items automatically
-    bought_once, frequent_items = guess_labels(Config.VERBOSE)
+    bought_once, frequent_items = guess_labels(logger, Config.VERBOSE)
     return bought_once, frequent_items, total_price
 
+def print_log(mystr, logger, header=False, footer=False):
+    if header:
+        header_len = (len(mystr)+10) *'-'
+        mystr = f"{header_len} \n START {mystr.upper()} \n{header_len}"
+    elif footer:
+        footer_len = (len(mystr)+10) *'-'
+        mystr = f"{footer_len} \n END {mystr.upper()} \n{footer_len}"
+    else:
+        pass
+    logger.info(mystr)
+    print(mystr)
+    return None
 
-def guess_labels(VERBOSE):
+def guess_labels(logger, VERBOSE):
     """Guess labels for uploaded items based on purchase history."""
+    if VERBOSE: print_log("guess_labels", logger, header=True, footer=False)
+
     bought_once = {}
     frequent_items = {}
     
     temp_items = Grocery_TEMP_Items.query.all()
     if VERBOSE:
-        message = f"Processing {len(temp_items)} items for label guessing"
-        print(message)
-        logger.info(message)
-    
+        print_log(f"Guessing the labels for {len(temp_items)} items:\n",
+                  logger, header=False, footer=False)
+
     for i, temp_item in enumerate(temp_items):
-        clean_item = clean_produce(temp_item.storeItem)
-        if not clean_item:
-            continue
-        
-        matches = find_store_item_matches(clean_item)
+        storeItem = temp_item.storeItem
+        storeCat = temp_item.storeCategory
+
         if VERBOSE:
-            message = f"Processing item {i}: {clean_item}"
-            print(message)
-            logger.info(message)        
-            
-        
+            print_log(f'\n-\n->{storeItem}: {storeCat}', logger, header=False, footer=False)
+
+        #processing for produce items only
+        if storeCat == "PRODUCE":
+            storeItem = clean_produce(storeItem)
+            if VERBOSE:print_log(f"Cleaning Produce item {storeItem}", logger, header=False, footer=False)
+            if not storeItem:
+                continue
+            else:
+                if VERBOSE:print_log(f"XXX-> Produce not cleaned? {storeItem}",
+                          logger, header=False, footer=False)
+        else: #not produce item
+            pass
+
+
+        matches = find_store_item_matches(storeItem)
+        if VERBOSE:
+            print_log(f"Guessing item {i}: {storeItem}:{matches}", logger, header=False, footer=False)
+
         if not matches:
             pass
             
@@ -459,6 +484,7 @@ def guess_labels(VERBOSE):
                 db.session.rollback()
                 logger.error(f"Error updating item: {e}")
 
+    if VERBOSE: print_log("guess_labels", logger, header=False, footer=True)
     return bought_once, frequent_items
 
 
@@ -466,7 +492,6 @@ def uploaded_items_to_ai():
     """ DELETE THIS LATER? NOT USED
         Export distinct items from Grocery_Items_TEMP to CSV."""
     try:
-        
        # Get distinct combinations of all fields
         distinct_items = db.session.query(
             Grocery_TEMP_Items.storeName,

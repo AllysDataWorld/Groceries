@@ -10,12 +10,7 @@ def text_mining_metro(text, metro_logger, VERBOSE):
     from config import Config
     import utils as uts
     
-    if VERBOSE:
-        TM_PRNSTMT = False
-    else:
-        TM_PRNSTMT = True    
-        metro_logger.info("\nstart text_mining_metro:" + str(text))
-        print("\nstart text_mining_metro:\n")
+    if VERBOSE: uts.print_log('text_mining_metro', metro_logger, header=True, footer=False)
 
     metro_headings = Config.METRO_CATEGORY
     subtotal_list = Config.SUBTOTALS
@@ -37,7 +32,6 @@ def text_mining_metro(text, metro_logger, VERBOSE):
     
     text = text[3:]
 
-    
     for i, tok in enumerate(text):
         thisTok = tok.split(" ")
         
@@ -94,15 +88,16 @@ def text_mining_metro(text, metro_logger, VERBOSE):
                              #metro_logger.info("Item price not found:" + str(item) +" - "+ str(price))
                              
                          insert_row.append((category, item, price))
-                                                 
-                         if TM_PRNSTMT:
-                            metro_logger.info(f"->PROCESSED: The item {item} is from category:{category} and it cost {price}")
-                            print(f"PROCESSED: The item {item} is from category:{category} and it cost {price}")
+
+                         if VERBOSE: uts.print_log(
+                             f"->PROCESSED: The item {item} is from category:{category} and it cost {price}",
+                             metro_logger, header=False, footer=False)
 
         # else:
         #     print('iteration complete')
     if len(produce_arr) > 0:  
-        metro_logger.info(f"----PRODUCE PROCESSING on array len {len(produce_arr)}---->\n"+ str(produce_arr))
+        if VERBOSE:uts.print_log(f"----PRODUCE PROCESSING on array len {len(produce_arr)}---->\n {produce_arr}",
+                                 metro_logger, header=False, footer=False)
     
     if len(produce_arr) == 1: #if bag of fruit: example ['APP MCINTOSH BAG']
         t = produce_arr[0].split(' ')
@@ -177,14 +172,11 @@ def text_mining_metro(text, metro_logger, VERBOSE):
         total_price = subtotal_price
 
     myLen = len(insert_row)
-    
-    if TM_PRNSTMT:
-        metro_logger.info(f"OUTPUT of text_mining_metro: {insert_row}")
-        metro_logger.info('END text_mining_metro--------------')    
-        
-        print(f"SEND OUPTPUT to app: row/s: \n{insert_row}")
-        print('End text_mining_metro')
-          
+
+    if VERBOSE:
+        uts.print_log(f"Final OUTPUT: {myLen} rows inserted: \n{insert_row}",
+                      metro_logger, header=False, footer=False)
+        uts.print_log(f"text_mining_metro", metro_logger, header=False, footer=True)
     return insert_row, total_price
 
 
