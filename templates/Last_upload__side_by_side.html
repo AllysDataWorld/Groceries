@@ -17,10 +17,6 @@
 
     {% include 'Last_upload_header.html' %}
 
-    <h4 style="text-align: center"> The total price is {{total_price}}  </h4>
-
-
-
     <TABLE> <!---outside table--->
       <tr>
         <th>Receipt Uploaded <br> Click image to enlarge </th>
@@ -34,6 +30,7 @@
             {% include 'Last_upload_filename.html' %}
         </td>
         <td>
+            <h4 style="text-align: center"> The total price is {{total_price}}  </h4>
             {% include 'Last_upload_middleButtons.html' %}
             <TABLE> <!---inside table--->
                 <tr>
@@ -64,8 +61,6 @@
                         <td>{{ task.recepitDate.date().strftime('%Y-%m-%d') }}</td>
                         <td>{{ task.recepitDate.time().strftime("%H:%M:%S") }}</td>
                         <td>
-                            <a href="/delete_temp_item/{{task.id}}">Delete</a>
-                            <br>
                             <a href="/update_items_temp_db/{{task.id}}">Update</a>
                         </td>
                     </tr>

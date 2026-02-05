@@ -1,6 +1,7 @@
 *.txt
 *.csv
 *.log
+*.png
 .idea/
 static/uploads/
 groceries.db

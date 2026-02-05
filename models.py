@@ -21,7 +21,7 @@ class Grocery_Items(db.Model):
     myCategory = db.Column(db.String(200), nullable=True)
     price = db.Column(db.Float, nullable=True)
     filename = db.Column(db.String(200), nullable=False)
-    recepitDate = db.Column(db.DateTime, default=datetime.utcnow)
+    recepitDate = db.Column(db.DateTime, nullable=False)
     groceries = db.relationship('Groceries', back_populates='children')
 
 class Grocery_TEMP_Items(db.Model):
@@ -33,7 +33,7 @@ class Grocery_TEMP_Items(db.Model):
     myCategory = db.Column(db.String(200), nullable=True)
     price = db.Column(db.Float, nullable=True)
     filename = db.Column(db.String(200), nullable=False)
-    recepitDate = db.Column(db.DateTime, default=datetime.utcnow)
+    recepitDate = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
         return f'<Grocery_TEMP_Items {self.id}>'

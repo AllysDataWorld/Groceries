@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block body %}
-    <p><h1 align="center">TEMP<br>Items Database</h1></p>
+    <p><h1 align="center">TEMP<br>Items Database <br> Up Down</h1></p>
 
 
     {% set img_width = 50 %}
@@ -53,8 +53,6 @@
                     <td>{{ task.recepitDate.date().strftime('%Y-%m-%d') }}</td>
                     <td>{{ task.recepitDate.time().strftime("%H:%M:%S") }}</td>
                     <td>
-                        <a href="/delete_temp_item/{{task.id}}">Delete</a>
-                        <br>
                         <a href="/update_items_temp_db/{{task.id}}">Update</a>
                     </td>
                 </tr>

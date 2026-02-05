@@ -19,7 +19,7 @@ def fake_populate_all():
 
     all_items = uts.find_store_item_matches("")  # Get all items
     unlabeled_items = uts.get_unlabeled_items()
-    total_price = uts.get_totalprice_from_db()
+    total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
 
     for row_num, temp_item in enumerate(unlabeled_items):
         clean_item = uts.clean_produce(temp_item.storeItem) #BUG: assumes every item is a PRODUCE. Fixed in other clean_produce calls
@@ -35,9 +35,9 @@ def fake_populate_all():
     flash(f"DUMMY Values Populated")
     filename = uts.get_filename()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Last_upload.html',
+    return render_template('Last_upload__side_by_side.html',
                            total_price = total_price,
-                           current_date=uts.get_date_from_db().date(),
+                           current_date=uts.get_date_from_TEMP_ITEMS_DB().date(),
                            filename=filename, tasks=temp_items)
 
 
@@ -53,8 +53,9 @@ def guess_label_for_new_items():
         all_items = uts.find_store_item_matches("")  # Get all items from DB
 
         if uts.get_VERBOSE():
+            print("\nStart of guess_label_for_new_items():")
             print(f'Comparing against {len(all_items)} items in Grocery_Items DB')
-            print(f'List of {len(unlabeled_items)} unlabeled_items from Grocery_TEMP_Items DB\n')
+            print(f'There are {len(unlabeled_items)} unlabeled_items from Grocery_TEMP_Items DB')
 
         for row_num, temp_item in enumerate(unlabeled_items):
             if temp_item.storeCategory == "PRODUCE":
@@ -90,21 +91,21 @@ def guess_label_for_new_items():
                         logger.error(f"Error updating item: {e}")
 
         # Display results
-        print("new_matches", type(new_matches), new_matches)
+        print("new_matches", new_matches)
         if new_matches:
             flash(f"Guessed for {len(new_matches)} new items")
             for original, matched in new_matches.items():
                 flash(f"{original} guessed {matched}")
 
     else:
-        print("no unlabeled items")
+        print("There are no unlabeled items")
         flash("There are no items with blank 'My_Category' or 'My_Item' ")
     filename = uts.get_filename()
-    total_price = uts.get_totalprice_from_db()
+    total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Last_upload.html',
+    return render_template('Last_upload__side_by_side.html',
                            total_price = total_price,
-                           current_date=uts.get_date_from_db().date(),
+                           current_date=uts.get_date_from_TEMP_ITEMS_DB().date(),
                            filename=filename, tasks=temp_items)
 
 
@@ -486,9 +487,9 @@ def last_upload():
     """Show items from last upload."""
     temp_items = Grocery_TEMP_Items.query.all()
     filename = uts.get_filename() if temp_items else ''
-    curr_date = uts.get_date_from_db().date() if temp_items else ''
-    total_price = uts.get_totalprice_from_db()
-    return render_template('Last_upload.html',
+    curr_date = uts.get_date_from_TEMP_ITEMS_DB().date() if temp_items else ''
+    total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
+    return render_template('Last_upload__side_by_side.html',
                            total_price=total_price,
                            current_date=curr_date,
                            filename=filename, tasks=temp_items)
@@ -499,9 +500,9 @@ def last_upload_view2():
     """Show items from last upload."""
     temp_items = Grocery_TEMP_Items.query.all()
     filename = uts.get_filename() if temp_items else ''
-    curr_date = uts.get_date_from_db().date() if temp_items else ''
-    total_price = uts.get_totalprice_from_db()
-    return render_template('Last_upload__side_by_side.html',
+    curr_date = uts.get_date_from_TEMP_ITEMS_DB().date() if temp_items else ''
+    total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
+    return render_template('Last_upload__updown.html',
                            total_price=total_price,
                            current_date=curr_date,
                            filename=filename, tasks=temp_items)
@@ -593,12 +594,12 @@ def change_recepit_date():
     else:
         flash("Date Field is empty")
 
-    total_price = uts.get_totalprice_from_db()
+    total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
     filename = uts.get_filename()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Last_upload.html',
+    return render_template('Last_upload__side_by_side.html',
                            total_price = total_price,
-                           current_date=uts.get_date_from_db().date(),
+                           current_date=uts.get_date_from_TEMP_ITEMS_DB().date(),
                            filename=filename, tasks=temp_items)
 
 
@@ -659,13 +660,13 @@ def upload():
 
     #uts.uploaded_items_to_ai() #wrong place for this code... if its used
 
-    current_date = uts.get_date_from_db().date()
+    current_date = uts.get_date_from_TEMP_ITEMS_DB().date()
     today_date = uts.convert_date(date.today())
     show_date_warning = (current_date == today_date)
     #print(f"current_date: {current_date} \ntoday_date: {today_date} \nif statement is {show_date_warning}")
 
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Last_upload.html',
+    return render_template('Last_upload__side_by_side.html',
                            current_date=current_date,
                            total_price = total_price,
                            show_date_warning=show_date_warning,

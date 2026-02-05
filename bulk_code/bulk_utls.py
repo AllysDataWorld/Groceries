@@ -15,9 +15,9 @@ def bulk_upload_qa():
     while True:  # Loop to allow user to retry after fixing errors
 
         # if receipt_date is today's date, then user has to say 'yes' to continue
-        current_date = uts.get_date_from_db().date()
+        current_date = uts.get_date_from_TEMP_ITEMS_DB().date()
         today_date = uts.convert_date(date.today())
-        #print(f"current_date: {current_date} \ntoday_date: {today_date} \nif statement is {current_date == today_date}")
+        print(f"current_date: {current_date} \ntoday_date: {today_date} \nif statement is {current_date == today_date}\n")
 
         unpopulated = uts.get_unpopulated_items()
 
@@ -36,9 +36,11 @@ def bulk_upload_qa():
             continue  # Restart the process
 
         if current_date == today_date:
-            user_input = input("The receipt date was automattically set to today's date. If this is correct please say YES\n")
-            if user_input.upper != 'YES':
+            user_input = input("The receipt date was automattically set to today's date. If this is correct please say YES\n").strip().upper()
+            if user_input != 'YES':
+                print("YOU SAID", user_input, " the statement is ", user_input != 'YES')
                 continue  # Restart the process
+
 
         #used the website to save the table
         temp_items = Grocery_TEMP_Items.query.all()

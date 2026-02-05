@@ -254,7 +254,7 @@ def get_unpopulated_items():
     ).scalars().all()
 
 
-def get_date_from_db():
+def get_date_from_TEMP_ITEMS_DB():
     """Get the current date from Grocery_TEMP."""
     from database import db
     #Get the first item's date
@@ -263,7 +263,7 @@ def get_date_from_db():
     ).scalar()
     return convert_date(result)
 
-def get_totalprice_from_db():
+def get_totalPrice_from_TEMP_ITEMS_DB():
     """Get the total price from Grocery_TEMP."""
     from database import db
     #Get the first item's date
@@ -351,19 +351,26 @@ def get_upload_date_from_OCRText():
         print(f"Look for Date in OCR Text -> possible_list: {possible_list}")
         print(f"Look for Date in OCR Text -> suggested dt: {dt}")
 
-    if len(dt.split('/')) == 3: # Expecting the format '24/11/21'
-        year = int("20" + dt.split('/')[0])
-        month = int(dt.split('/')[1])
-        day = int(dt.split('/')[2])
-        OCR_dt = date(year, month, day)
-        OCR_dt = convert_date(OCR_dt)
-        human_readable = OCR_dt.strftime("%B %d, %Y")
-        print(f"The date on the receipt was {human_readable}")
-        return OCR_dt
-    else:
-        #print(f"Date is not in the expected format YEAR/MO/DAY")
-        print("Please confirm receipt date")
-        return None
+    try:
+        if len(dt.split('/')) == 3: # Expecting the format '24/11/21'
+            year = int("20" + dt.split('/')[0])
+            month = int(dt.split('/')[1])
+            day = int(dt.split('/')[2])
+            OCR_dt = date(year, month, day)
+            OCR_dt = convert_date(OCR_dt)
+            human_readable = OCR_dt.strftime("%B %d, %Y")
+            print(f"The date on the receipt was {human_readable}")
+            return OCR_dt
+        else:
+            #print(f"Date is not in the expected format YEAR/MO/DAY")
+            print("Please confirm receipt date")
+            return None
+
+    except Exception as e:
+        print(f"Exception {e} occured with exracting the date from OCR ")
+
+
+
 
 
 
@@ -410,10 +417,10 @@ def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process
 def print_log(mystr, logger, header=False, footer=False):
     if header:
         header_len = (len(mystr)+10) *'-'
-        mystr = f"{header_len} \n START {mystr.upper()} \n{header_len}"
+        mystr = f"{header_len} \n START {mystr.upper()} \n{header_len}\n"
     elif footer:
         footer_len = (len(mystr)+10) *'-'
-        mystr = f"{footer_len} \n END {mystr.upper()} \n{footer_len}"
+        mystr = f"{footer_len} \n END {mystr.upper()} \n{footer_len}\n"
     else:
         pass
     logger.info(mystr)
@@ -428,8 +435,9 @@ def guess_labels(logger, VERBOSE):
     frequent_items = {}
     
     temp_items = Grocery_TEMP_Items.query.all()
+    num_items = len(temp_items)
     if VERBOSE:
-        print_log(f"Guessing the labels for {len(temp_items)} items:\n",
+        print_log(f"Guessing the labels for {num_items} items:\n",
                   logger, header=False, footer=False)
 
     for i, temp_item in enumerate(temp_items):
@@ -437,16 +445,16 @@ def guess_labels(logger, VERBOSE):
         storeCat = temp_item.storeCategory
 
         if VERBOSE:
-            print_log(f'\n-\n->{storeItem}: {storeCat}', logger, header=False, footer=False)
+            print_log(f'\n{i} of {num_items} \nFor {storeCat} Item: {storeItem}', logger, header=False, footer=False)
 
         #processing for produce items only
         if storeCat == "PRODUCE":
             storeItem = clean_produce(storeItem)
-            if VERBOSE:print_log(f"Cleaning Produce item {storeItem}", logger, header=False, footer=False)
+            if VERBOSE:print_log(f"Cleaning Produce item: {storeItem}", logger, header=False, footer=False)
             if not storeItem:
                 continue
             else:
-                if VERBOSE:print_log(f"XXX-> Produce not cleaned? {storeItem}",
+                if VERBOSE:print_log(f"XXX-> Produce was not changed after cleaning... {storeItem}",
                           logger, header=False, footer=False)
         else: #not produce item
             pass
@@ -454,7 +462,7 @@ def guess_labels(logger, VERBOSE):
 
         matches = find_store_item_matches(storeItem)
         if VERBOSE:
-            print_log(f"Guessing item {i}: {storeItem}:{matches}", logger, header=False, footer=False)
+            print_log(f"Found the following Matches:{matches}", logger, header=False, footer=False)
 
         if not matches:
             pass
@@ -473,6 +481,7 @@ def guess_labels(logger, VERBOSE):
                 logger.error(f"Error updating item: {e}")
         else:
             # Frequent item
+
             match = matches[0]  # Use most recent
             temp_item.myItem = match.myItem
             temp_item.myCategory = match.myCategory

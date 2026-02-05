@@ -5,8 +5,11 @@ function save_item() {
 }
 
 function delete_n_upload() {
-    window.location.href = "/delete_all_Grocery_TEMP_Items/";
-}    
+    if (confirm('Are you sure you want to delete ALL items and re-upload?')) {
+        window.location.href = "/delete_all_Grocery_TEMP_Items/";
+    }
+}
+
 
 function guessLabelForNewItems() {
     window.location.href = "/guess_label_for_new_items/";
@@ -23,6 +26,7 @@ function lastUpload() {
 function updateDate() {
     window.location.href = "/update_date/";
 }
+
 
 function deleteSelected() {
     const checkboxes = document.querySelectorAll('input[name="item_ids"]:checked');
