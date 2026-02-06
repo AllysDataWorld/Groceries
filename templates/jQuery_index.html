@@ -1,12 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head> 
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grocery Search</title>
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+{% extends 'base.html' %}
+
+{% block header %}
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+{% endblock %}
+
+{% block body %}
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"
+            crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+
 <script>
 $(document).ready(function(){
   load_data();
@@ -33,10 +38,10 @@ $(document).ready(function(){
   });
 });
 </script>
-</head>
-<body>
+
+
 <div class="container search-table">
-<p><h2 align="center">Search using Jquery Ajax</h2></p>
+<p><h2 align="center">Search the database</h2></p>
             <div class="search-box">
                 <div class="row">
                     <div class="col-md-3">
@@ -74,5 +79,4 @@ $(document).ready(function(){
     margin-bottom: 0%;
 }
 </style>
-</body>
-</html>
+{% endblock %}

@@ -168,6 +168,62 @@ def ajax_live_search():
         )
     })
 
+
+#Search while updating
+@app.route('/get_categories/')
+def get_categories():
+    """Return distinct myCategory values for autocomplete."""
+    search = request.args.get('term', '')
+    categories = db.session.query(Grocery_Items.myCategory)\
+        .distinct()\
+        .filter(Grocery_Items.myCategory.isnot(None))\
+        .filter(Grocery_Items.myCategory.like(f'%{search}%'))\
+        .order_by(Grocery_Items.myCategory)\
+        .limit(20)\
+        .all()
+    return jsonify([c[0] for c in categories])
+
+@app.route('/get_items/')
+def get_items():
+    """Return distinct myItem values for autocomplete."""
+    search = request.args.get('term', '')
+    items = db.session.query(Grocery_Items.myItem)\
+        .distinct()\
+        .filter(Grocery_Items.myItem.isnot(None))\
+        .filter(Grocery_Items.myItem.like(f'%{search}%'))\
+        .order_by(Grocery_Items.myItem)\
+        .limit(20)\
+        .all()
+    return jsonify([i[0] for i in items])
+
+@app.route('/get_store_categories/')
+def get_store_categories():
+    """Return distinct storeCategory values for autocomplete."""
+    search = request.args.get('term', '')
+    categories = db.session.query(Grocery_Items.storeCategory)\
+        .distinct()\
+        .filter(Grocery_Items.storeCategory.isnot(None))\
+        .filter(Grocery_Items.storeCategory.like(f'%{search}%'))\
+        .order_by(Grocery_Items.storeCategory)\
+        .limit(20)\
+        .all()
+    return jsonify([c[0] for c in categories])
+
+@app.route('/get_store_items/')
+def get_store_items():
+    """Return distinct storeItem values for autocomplete."""
+    search = request.args.get('term', '')
+    items = db.session.query(Grocery_Items.storeItem)\
+        .distinct()\
+        .filter(Grocery_Items.storeItem.isnot(None))\
+        .filter(Grocery_Items.storeItem.like(f'%{search}%'))\
+        .order_by(Grocery_Items.storeItem)\
+        .limit(20)\
+        .all()
+    return jsonify([i[0] for i in items])
+
+
+
 # Routes - Manual Entry
 @app.route('/add_item/')
 def add_item():
