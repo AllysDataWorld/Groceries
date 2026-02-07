@@ -14,71 +14,75 @@
 
 {% block body %}
     <p><h1 align="center">TEMP<br>Items Database <br> SIDE-BY-SIDE</h1></p>
+    {% if tasks|length > 0 %}
+        {% include 'Last_upload_header.html' %}
 
-    {% include 'Last_upload_header.html' %}
+        <TABLE> <!---outside table--->
+          <tr>
+            <th>Receipt Uploaded <br> Click image to enlarge </th>
+            <th>Receipt Items</th>
+          </tr>
 
-    <TABLE> <!---outside table--->
-      <tr>
-        <th>Receipt Uploaded <br> Click image to enlarge </th>
-        <th>Receipt Items</th>
-      </tr>
-
-      <tr>
-        <td>
-            {% set img_width = 500 %}
-            {% set img_height = 600 %}
-            {% include 'Last_upload_filename.html' %}
-        </td>
-        <td>
-            <h4 style="text-align: center"> The total price is {{total_price}}  </h4>
-            {% include 'Last_upload_middleButtons.html' %}
-            <TABLE> <!---inside table--->
-                <tr>
-                    <th><input type="checkbox" onclick="toggleAll(this)" title="Select All"></th>
-                    <th>ID</th>
-                    <th>Filename</th>
-                    <th>Store Name</th>
-                    <th>Store Category</th>
-                    <th>Store Item</th>
-                    <th>My Category</th>
-                    <th>My Item</th>
-                    <th>Price</th>
-                    <th>Date on Receipt</th>
-                    <th>DateTime on Receipt</th>
-                    <th>Actions</th>
-                </tr>
-                {% for task in tasks %}
+          <tr>
+            <td>
+                {% set img_width = 500 %}
+                {% set img_height = 600 %}
+                {% include 'Last_upload_filename.html' %}
+            </td>
+            <td>
+                <h4 style="text-align: center"> The total price is {{total_price}}  </h4>
+                {% include 'Last_upload_middleButtons.html' %}
+                <TABLE> <!---inside table--->
                     <tr>
-                        <td><input type="checkbox" name="item_ids" value="{{task.id}}" onclick="handleCheckboxClick(event, {{loop.index0}})"></td>
-                        <th>{{task.id}}</th>
-                        <th>{{task.filename}}</th>
-                        <td>{{ task.storeName }}</td>
-                        <td>{{ task.storeCategory }}</td>
-                        <td>{{ task.storeItem }}</td>
-                        <td>{{ task.myCategory }}</td>
-                        <td>{{ task.myItem }}</td>
-                        <td>${{ "%.2f"|format(task.price) }}</td>
-                        <td>{{ task.recepitDate.date().strftime('%Y-%m-%d') }}</td>
-                        <td>{{ task.recepitDate.time().strftime("%H:%M:%S") }}</td>
-                        <td>
-                            <a href="/update_items_temp_db/{{task.id}}">Update</a>
-                        </td>
+                        <th><input type="checkbox" onclick="toggleAll(this)" title="Select All"></th>
+                        <th>ID</th>
+                        <th>Filename</th>
+                        <th>Store Name</th>
+                        <th>Store Category</th>
+                        <th>Store Item</th>
+                        <th>My Category</th>
+                        <th>My Item</th>
+                        <th>Price</th>
+                        <th>Date on Receipt</th>
+                        <th>DateTime on Receipt</th>
+                        <th>Actions</th>
                     </tr>
-                {% endfor %}
-            </table> <!---inside table--->
+                    {% for task in tasks %}
+                        <tr>
+                            <td><input type="checkbox" name="item_ids" value="{{task.id}}" onclick="handleCheckboxClick(event, {{loop.index0}})"></td>
+                            <th>{{task.id}}</th>
+                            <th>{{task.filename}}</th>
+                            <td>{{ task.storeName }}</td>
+                            <td>{{ task.storeCategory }}</td>
+                            <td>{{ task.storeItem }}</td>
+                            <td>{{ task.myCategory }}</td>
+                            <td>{{ task.myItem }}</td>
+                            <td>${{ "%.2f"|format(task.price) }}</td>
+                            <td>{{ task.recepitDate.date().strftime('%Y-%m-%d') }}</td>
+                            <td>{{ task.recepitDate.time().strftime("%H:%M:%S") }}</td>
+                            <td>
+                                <a href="/update_items_temp_db/{{task.id}}">Update</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table> <!---inside table--->
 
-        </td>
-      </tr>
-    </TABLE> <!---outside table--->
+            </td>
+          </tr>
+        </TABLE> <!---outside table--->
 
 
+        <br>
+        <hr>
+        <hr>
+        <br>
 
-    <br>
-    <hr>
-    <hr>
-    <br>
-    
+    {% else %}
+        <div class="container" align="center">
+            <button class="nice-button-green" onclick="window.location.href='/upload/'">Upload New Receipt</button>
+        </div>
+    {% endif %}
+
     {% include 'Last_upload_footer.html' %}
-
 
 {% endblock %}

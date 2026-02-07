@@ -97,7 +97,7 @@ async def run_agent_query():
     # The await keyword must be inside an async function
     response = await runner.run_debug(my_prompt)
     print(response)
-    write_resp = os.path.join(app.config['OUTPUT_FOLDER'], 'ai_response.txt')
+    write_resp = os.path.join(app.config['OUT_AI'], 'ai_response.txt')
     with open(write_resp, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(response)

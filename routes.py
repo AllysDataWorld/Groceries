@@ -625,6 +625,10 @@ def export_distinct_items():
                         item.myItem,
                         item.myCategory
                     ])
+                else:
+                    print ("Export Distinct Items: row skipped ", item)
+                    flash("Export Distinct Items: row skipped ", item)
+
         logger.info(f"Exported {len(distinct_items)} distinct items to {csv_filename}")
         flash(f"Successfully exported {len(distinct_items)} distinct items to {csv_filename}")
         return redirect('/delete_page/')

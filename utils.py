@@ -78,7 +78,7 @@ def get_upload_date():
         return "get_upload_date() File Note Found"
 
 def get_upload_items():
-    temp = os.path.join(app.config['OUTPUT_FOLDER'], 'send_to_ai.csv')
+    temp = os.path.join(app.config['OUT_AI'], 'send_to_ai.csv')
     with open(temp, 'r') as fin:
         list_of_items = fin.read().splitlines()
     upload_date = get_upload_date()
@@ -185,7 +185,7 @@ def bulk_add_grocery_item(temp_items):
     receipt_id = add_raw_receipt(raw_text, store_name, total_price, get_filename())
        
     send_to_ai = [temp_item.myItem for temp_item in temp_items]
-    output_ai = os.path.join(app.config['OUTPUT_FOLDER'], 'send_to_ai.csv')
+    output_ai = os.path.join(app.config['OUT_AI'], 'send_to_ai.csv')
     with open(output_ai, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(send_to_ai)
@@ -515,7 +515,7 @@ def uploaded_items_to_ai():
         ).all() 
         
         # Create CSV filename 
-        csv_filename = "Uploaded_Items.csv"
+        csv_filename = "Uploaded_Items_for_AI.csv"
         csv_path = os.path.join(app.config['OUTPUT_FOLDER'], csv_filename)
         
         # Ensure output folder exists
