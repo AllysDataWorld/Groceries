@@ -7,7 +7,7 @@ static/uploads/
 groceries.db
 ai/AskedGoogleGemini/*.json
 /templates/archive/
-
+/goshopping/morecode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

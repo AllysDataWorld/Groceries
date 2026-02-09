@@ -3,7 +3,7 @@ import os
 from datetime import date
 
 from app import app, logger
-from models import Groceries, Grocery_Items, Grocery_TEMP_Items
+from models import Groceries, Grocery_Items, Grocery_TEMP_Items, Smart_Shopping
 import utils as uts
 from database import db
 
@@ -142,24 +142,38 @@ def search():
     """Search page."""
     return render_template('jQuery_index.html')
 
+
 @app.route("/ajaxlivesearch", methods=["POST"])
 def ajax_live_search():
     """AJAX endpoint for live search."""
     search_word = request.form.get('query', '')
-    search_pattern = f"%{search_word}%"
-    
+    exact_search = request.form.get('exact', 'false')  # Get exact search flag
+
     if not search_word:
         results = Grocery_Items.query.order_by(Grocery_Items.recepitDate.desc()).limit(5).all()
     else:
-        results = Grocery_Items.query.filter(
-            or_(
-                Grocery_Items.storeName.like(search_pattern),
-                Grocery_Items.storeItem.like(search_pattern),
-                Grocery_Items.myCategory.like(search_pattern),
-                Grocery_Items.myItem.like(search_pattern)
-            )
-        ).order_by(Grocery_Items.recepitDate.desc()).limit(5).all()
-    
+        if exact_search == 'true':
+            # Exact match search
+            results = Grocery_Items.query.filter(
+                or_(
+                    Grocery_Items.storeName == search_word,
+                    Grocery_Items.storeItem == search_word,
+                    Grocery_Items.myCategory == search_word,
+                    Grocery_Items.myItem == search_word
+                )
+            ).order_by(Grocery_Items.recepitDate.desc()).all()
+        else:
+            # Fuzzy search (default)
+            search_pattern = f"%{search_word}%"
+            results = Grocery_Items.query.filter(
+                or_(
+                    Grocery_Items.storeName.like(search_pattern),
+                    Grocery_Items.storeItem.like(search_pattern),
+                    Grocery_Items.myCategory.like(search_pattern),
+                    Grocery_Items.myItem.like(search_pattern)
+                )
+            ).order_by(Grocery_Items.recepitDate.desc()).all()
+
     return jsonify({
         'htmlresponse': render_template(
             'jQuery_response.html',
@@ -167,6 +181,7 @@ def ajax_live_search():
             numrows=len(results)
         )
     })
+
 
 
 #Search while updating
@@ -537,6 +552,13 @@ def items():
     """Show all grocery items."""
     items = Grocery_Items.query.order_by(Grocery_Items.recepitDate.desc()).all()
     return render_template('items.html', tasks=items)
+
+
+@app.route('/shopping/')
+def shopping():
+    """Show all grocery items."""
+    items = Smart_Shopping.query.order_by(Smart_Shopping.purchase_count.desc()).all()
+    return render_template('shopping.html', tasks=items)
 
 @app.route('/last_upload/')
 def last_upload():

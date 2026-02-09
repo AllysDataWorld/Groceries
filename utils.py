@@ -1,5 +1,3 @@
-import sys
-
 import os
 import re
 import pytz
@@ -414,6 +412,10 @@ def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process
     bought_once, frequent_items = guess_labels(logger, Config.VERBOSE)
     return bought_once, frequent_items, total_price
 
+
+
+
+
 def print_log(mystr, logger, header=False, footer=False):
     if header:
         header_len = (len(mystr)+10) *'-'
@@ -428,6 +430,7 @@ def print_log(mystr, logger, header=False, footer=False):
     return None
 
 def guess_labels(logger, VERBOSE):
+    VERBOSE=True
     """Guess labels for uploaded items based on purchase history."""
     if VERBOSE: print_log("guess_labels", logger, header=True, footer=False)
 
@@ -436,8 +439,12 @@ def guess_labels(logger, VERBOSE):
     
     temp_items = Grocery_TEMP_Items.query.all()
     num_items = len(temp_items)
+    if num_items == 0:
+        print("NO ITEMS IN Grocery_TEMP_Items")
+        return {}, {}
+
     if VERBOSE:
-        print_log(f"Guessing the labels for {num_items} items:\n",
+        print_log(f"Guessing the labels all items uploaded (aka Grocery_TEMP_Items):\n",
                   logger, header=False, footer=False)
 
     for i, temp_item in enumerate(temp_items):
@@ -451,10 +458,12 @@ def guess_labels(logger, VERBOSE):
         if storeCat == "PRODUCE":
             storeItem = clean_produce(storeItem)
             if VERBOSE:print_log(f"Cleaning Produce item: {storeItem}", logger, header=False, footer=False)
-            if not storeItem:
+            if not storeItem: #was updated afte clean_produce()
+                if VERBOSE:print_log(f"XXX-> Produce was updated after calling clean_produce()... {storeItem}",
+                          logger, header=False, footer=False)
                 continue
             else:
-                if VERBOSE:print_log(f"XXX-> Produce was not changed after cleaning... {storeItem}",
+                if VERBOSE:print_log(f"XXX-> Produce was NOT changed after cleaning... {storeItem}",
                           logger, header=False, footer=False)
         else: #not produce item
             pass
@@ -462,7 +471,7 @@ def guess_labels(logger, VERBOSE):
 
         matches = find_store_item_matches(storeItem)
         if VERBOSE:
-            print_log(f"Found the following Matches:{matches}", logger, header=False, footer=False)
+            print_log(f"Found {len(matches)} matches:", logger, header=False, footer=False)
 
         if not matches:
             pass
@@ -470,9 +479,12 @@ def guess_labels(logger, VERBOSE):
         elif len(matches) == 1:
             # Bought once before
             match = matches[0]
+            keep = temp_item.storeItem
             temp_item.myItem = match.myItem
             temp_item.myCategory = match.myCategory
             bought_once[temp_item.myItem] = match.recepitDate.date()
+            if VERBOSE: print_log(f"Bought ONCE - ORIG:{keep} \nUpdated:{match.myItem}",
+                                  logger, header=False, footer=False)
 
             try:
                 db.session.commit()
@@ -481,11 +493,15 @@ def guess_labels(logger, VERBOSE):
                 logger.error(f"Error updating item: {e}")
         else:
             # Frequent item
-
+            for m in matches:
+                print("> Matches:", m.storeItem)
             match = matches[0]  # Use most recent
+            keep = temp_item.storeItem
             temp_item.myItem = match.myItem
             temp_item.myCategory = match.myCategory
             frequent_items[len(matches)] = temp_item.myItem
+            if VERBOSE: print_log(f"Bought MANY TIMES - ORIG:{keep} \nUpdated:{match.myItem}",
+                                  logger, header=False, footer=False)
  
             try:
                 db.session.commit()

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+<p><h1 align="center">Shopping <br> Database</h1></p>
+
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+</div>
+</div>
+
+<div class="content">
+    {% if tasks|length < 1 %}
+    <h4 style="text-align: center">There are no items in the database. Upload a new recipt and populate the shopping db!</h4>
+
+
+    {% else %}
+        <h3 style="text-align: center">Table is ordered by purchase_count</h3>
+        <h5 style="text-align: center">To update 'myItem' or 'myCategory', please update the <a href="/items/">items</a> database </h5>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>myItem</th>
+            <th>myCategory</th>
+            <th>first_purchase_date</th>
+			<th>last_purchase_date</th>
+			<th>purchase_count</th>
+			<th>average_interval</th>
+			<th>std_deviation</th>
+			<th>typical_quantity</th>
+            <th>typical_price</th>
+			<th>last_updated</th>
+            <th>Actions</th>
+        </tr>
+        {% for task in tasks %}
+            <tr>
+                <th>{{task.id}}</th>            
+                <th>{{task.myItem}}</th>
+                <th>{{task.myCategory}}</th>
+                <td>{{ task.first_purchase_date.date().strftime('%Y-%m-%d') }}</td>
+                <td>{{ task.last_purchase_date.date().strftime('%Y-%m-%d') }}</td>
+                <td>{{ task.purchase_count }}</td>
+
+                <td>{{ "%.2f"|format(task.average_interval or 0) }}</td>
+                <td>{{ "%.2f"|format(task.std_deviation or 0) }}</td>
+
+                <td>{{ task.typical_quantity }}</td>
+                <td>{{ task.typical_price }}</td>
+
+                <td>{{ task.last_updated.date().strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <a href="/delete_item/{{task.id}}">Delete</a>
+                    <br>
+                    <a href="/update_items/{{task.id}}">Update</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+
+{% endblock %}
