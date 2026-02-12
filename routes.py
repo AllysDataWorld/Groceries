@@ -38,7 +38,7 @@ def fake_populate_all():
     flash(f"DUMMY Values Populated")
     filename = uts.get_filename()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Last_upload__side_by_side.html',
+    return render_template('Last_upload_web.html',
                            total_price = total_price,
                            current_date=uts.get_date_from_TEMP_ITEMS_DB().date(),
                            filename=filename, tasks=temp_items)
@@ -106,7 +106,7 @@ def guess_label_for_new_items():
     filename = uts.get_filename()
     total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Last_upload__side_by_side.html',
+    return render_template('Last_upload_web.html',
                            total_price = total_price,
                            current_date=uts.get_date_from_TEMP_ITEMS_DB().date(),
                            filename=filename, tasks=temp_items)
@@ -323,7 +323,7 @@ def delete_multiple_items_TempDB():
         db.session.rollback()
         flash(f'Error deleting items: {str(e)}', 'error')
     
-    return last_upload()
+    return last_upload_web()
 
 @app.route('/delete_all/')
 def delete_all():
@@ -391,8 +391,8 @@ def delete_temp_item(id):
 # Update routes
 ########################################################
 @app.route('/update/<int:id>/', methods=['GET', 'POST'])
-def update_receipt(id):
-    """Update a receipt."""
+def update(id):
+    """Update Groceries table."""
     receipt = Groceries.query.get_or_404(id)
     
     if request.method == 'POST':   
@@ -418,11 +418,9 @@ def update_receipt(id):
         receipt.receiptText = request.form['updated_receiptText']
         receipt.filename = request.form['updated_filename']
         receipt.subtotal = uts.convert_price(request.form['updated_price'])
-        
-        new_date = uts.convert_date(request.form['updated_upload_date'])
-        if receipt.upload_date.date() > new_date:
-            receipt.upload_date = new_date
-        
+
+        new_date = uts.convert_date_to_format(request.form['updated_upload_date'])
+        receipt.upload_date = uts.convert_date(new_date)
 
         try:
             db.session.commit()
@@ -434,9 +432,9 @@ def update_receipt(id):
     
     return render_template('update.html', task=receipt)
 
-@app.route('/update_items/<int:id>/', methods=['GET', 'POST'])
-def update_items_route(id):
-    """Update a grocery item."""
+@app.route('/update_item/<int:id>/', methods=['GET', 'POST'])
+def update_item(id):
+    """Update Grocery_Items table."""
     item = Grocery_Items.query.get_or_404(id)
     
     if request.method == 'POST':
@@ -445,7 +443,7 @@ def update_items_route(id):
         with open(updated, 'a', newline='') as csvfile:
                 updatewriter = csv.writer(csvfile)
                 updatewriter.writerow("")
-                updatewriter.writerow(["ROUTE: /update_items/"])
+                updatewriter.writerow(["ROUTE: /update_item/"])
         
                 updatewriter.writerow(["Update GroceriesITEMS ORIG ROW",
                     item.storeName,
@@ -480,11 +478,11 @@ def update_items_route(id):
             logger.error(f"Error updating item: {e}")
             return 'Error updating item'
     
-    return render_template('update_items.html', task=item)
+    return render_template('update_item.html', task=item)
 
-@app.route('/update_items_temp_db/<int:id>/', methods=['GET', 'POST'])
-def update_temp_item_route(id):
-    """Update a temporary item."""
+@app.route('/update_items_temp/<int:id>/', methods=['GET', 'POST'])
+def update_temp_item(id):
+    """Update Grocery_TEMP_Items table."""
     item = Grocery_TEMP_Items.query.get_or_404(id)
     filename = uts.get_filename()   
     
@@ -514,7 +512,6 @@ def update_temp_item_route(id):
         item.myCategory = request.form['updated_myCategory']
         item.myItem = request.form['updated_myItem']
         item.price = uts.convert_price(request.form['updated_price'])
-        
 
         try:
             db.session.commit()
@@ -523,15 +520,16 @@ def update_temp_item_route(id):
             db.session.rollback()
             logger.error(f"Error updating temp item: {e}")
             return 'Error updating temp item'
-        
-          
+
     return render_template('update_items_temp.html', filename=filename, task=item)
     
 
 
 
+########################################################
+# Base Tabs
+########################################################
 
-# Utility routes
 @app.route('/home/')
 def home():
     """Home page."""
@@ -542,8 +540,6 @@ def delete_page():
     """Delete operations page."""
     return render_template('delete.html')
 
-
-# Routes - Display
 @app.route('/')
 def index():
     """Main page showing all receipts."""
@@ -556,42 +552,40 @@ def items():
     items = Grocery_Items.query.order_by(Grocery_Items.recepitDate.desc()).all()
     return render_template('items.html', tasks=items)
 
-
 @app.route('/shopping/')
 def shopping():
     """Show all grocery items."""
     items = Smart_Shopping.query.order_by(Smart_Shopping.purchase_count.desc()).all()
     return render_template('shopping.html', tasks=items)
 
-@app.route('/last_upload/')
-def last_upload():
+@app.route('/last_upload_web/')
+def last_upload_web():
     """Show items from last upload."""
     temp_items = Grocery_TEMP_Items.query.all()
     filename = uts.get_filename() if temp_items else ''
     curr_date = uts.get_date_from_TEMP_ITEMS_DB().date() if temp_items else ''
     total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
-    return render_template('Last_upload__side_by_side.html',
+    return render_template('Last_upload_web.html',
                            total_price=total_price,
                            current_date=curr_date,
                            filename=filename, tasks=temp_items)
 
-
-@app.route('/last_upload_view2/')
-def last_upload_view2():
+@app.route('/last_upload_phone/')
+def last_upload_phone():
     """Show items from last upload."""
     temp_items = Grocery_TEMP_Items.query.all()
     filename = uts.get_filename() if temp_items else ''
     curr_date = uts.get_date_from_TEMP_ITEMS_DB().date() if temp_items else ''
     total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
-    return render_template('Last_upload__updown.html',
+    return render_template('Last_upload_phone.html',
                            total_price=total_price,
                            current_date=curr_date,
                            filename=filename, tasks=temp_items)
 
 
-
-
-
+########################################################
+# functions called by main tabs
+########################################################
 @app.route('/display/<filename>')
 def display_image(filename):
     """Display uploaded image."""
@@ -607,7 +601,6 @@ def check_last_upload():
     else:
         flash("You must delete or save the existing rows first")
         return redirect('/last_upload/')
-
 
 @app.route('/export_distinct_items/')
 def export_distinct_items():
@@ -663,7 +656,6 @@ def export_distinct_items():
         flash(f"Error exporting items: {str(e)}")
         return redirect('/delete_page/')
 
-
 @app.route('/change_recepit_date/', methods=['GET', 'POST'])
 def change_recepit_date():
     receipt_date = request.form.get('recepitDate') # This will be 'YYYY-MM-DD'
@@ -682,7 +674,7 @@ def change_recepit_date():
     total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
     filename = uts.get_filename()
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Last_upload__side_by_side.html',
+    return render_template('Last_upload_web.html',
                            total_price = total_price,
                            current_date=uts.get_date_from_TEMP_ITEMS_DB().date(),
                            filename=filename, tasks=temp_items)
@@ -756,7 +748,6 @@ def update_shopping_settings():
                 include_in_shopping_list=include
             )
             db.session.add(setting)
-
     try:
         db.session.commit()
         flash("Shopping list settings updated successfully!")
@@ -840,7 +831,7 @@ def upload():
     #print(f"current_date: {current_date} \ntoday_date: {today_date} \nif statement is {show_date_warning}")
 
     temp_items = Grocery_TEMP_Items.query.order_by(Grocery_TEMP_Items.recepitDate.desc()).all()
-    return render_template('Last_upload__side_by_side.html',
+    return render_template('Last_upload_web.html',
                            current_date=current_date,
                            total_price = total_price,
                            show_date_warning=show_date_warning,
