@@ -3,14 +3,17 @@ import os
 from datetime import date
 
 from app import app, logger
-from models import Groceries, Grocery_Items, Grocery_TEMP_Items, Smart_Shopping
+from models import Groceries, Grocery_Items, Grocery_TEMP_Items, Smart_Shopping, Shopping_List_Settings
+
 import utils as uts
 from database import db
+from datetime import datetime
 
 from flask import render_template, url_for, request, redirect, flash, jsonify
 from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 from code_helpers.levenshtein_distance import levenshtein_distance
+from go_shopping.get_shopping import get_shopping_list, get_shopping_list_summary
 
 
 @app.route('/fake_populate_all/')
@@ -685,8 +688,97 @@ def change_recepit_date():
                            filename=filename, tasks=temp_items)
 
 
+########################################################
+# Shopping routes
+########################################################
+@app.route('/shopping_settings/', methods=['GET'])
+def shopping_settings():
+    """Display shopping list settings page."""
+
+    # Get all distinct categories from Grocery_Items
+    all_categories = db.session.query(Grocery_Items.myCategory) \
+        .distinct() \
+        .filter(Grocery_Items.myCategory.isnot(None)) \
+        .order_by(Grocery_Items.myCategory) \
+        .all()
+
+    categories = [cat[0] for cat in all_categories]
+
+    # Get existing settings
+    settings = {}
+    for setting in Shopping_List_Settings.query.all():
+        settings[setting.myCategory] = setting.include_in_shopping_list
+
+    # Build settings list with defaults
+    category_settings = []
+    for category in categories:
+        category_settings.append({
+            'category': category,
+            'include': settings.get(category, True)  # Default to True if not set
+        })
+
+    return render_template('shopping_settings.html', categories=category_settings)
 
 
+@app.route('/update_shopping_settings/', methods=['POST'])
+def update_shopping_settings():
+    """Update shopping list category settings."""
+
+    # Get all categories from form
+    form_data = request.form.to_dict()
+
+    # Get all distinct categories to know which ones to process
+    all_categories = db.session.query(Grocery_Items.myCategory) \
+        .distinct() \
+        .filter(Grocery_Items.myCategory.isnot(None)) \
+        .all()
+
+    categories = [cat[0] for cat in all_categories]
+
+    # Update settings for each category
+    for category in categories:
+        # Form checkboxes only send data if checked
+        # If category is in form_data, it's included (checked)
+        # If not in form_data, it's excluded (unchecked)
+        include = (f"include_{category}" in form_data)
+
+        # Check if setting exists
+        setting = Shopping_List_Settings.query.filter_by(myCategory=category).first()
+
+        if setting:
+            # Update existing
+            setting.include_in_shopping_list = include
+            setting.last_updated = datetime.utcnow()
+        else:
+            # Create new
+            setting = Shopping_List_Settings(
+                myCategory=category,
+                include_in_shopping_list=include
+            )
+            db.session.add(setting)
+
+    try:
+        db.session.commit()
+        flash("Shopping list settings updated successfully!")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error updating settings: {e}")
+
+    return redirect('/shopping_settings/')
+
+
+
+@app.route('/shopping_list_summary/')
+def shopping_list_summary():
+    """Display the smart shopping list."""
+    summary = get_shopping_list_summary()
+    return render_template('shopping_list_summary.html', summary=summary)
+
+@app.route('/shopping_list/')
+def shopping_list_page():
+    """Display the smart shopping list."""
+    shop_list = get_shopping_list()
+    return render_template('shopping_list.html', shopping_list=shop_list)
 
 ########################################################
 # UPLOAD routes

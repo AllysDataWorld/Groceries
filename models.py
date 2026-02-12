@@ -65,3 +65,13 @@ class Smart_Shopping(db.Model):
 
     def __repr__(self):
         return f'<Smart_Shopping {self.myItem}>'
+
+
+class Shopping_List_Settings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    myCategory = db.Column(db.String(200), nullable=False, unique=True, index=True)
+    include_in_shopping_list = db.Column(db.Boolean, nullable=False, default=True)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Shopping_List_Settings {self.myCategory}: {self.include_in_shopping_list}>'

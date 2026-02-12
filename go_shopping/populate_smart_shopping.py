@@ -40,12 +40,13 @@ def populate_smart_shopping():
         first_purchase = purchases[0].recepitDate
         last_purchase = purchases[-1].recepitDate
 
+        my_category = purchases.myCategory #replace the code below.
         # Get myCategory (use most recent non-null value)
-        my_category = None
-        for p in reversed(purchases):
-            if p.myCategory:
-                my_category = p.myCategory
-                break
+        # my_category = None
+        # for p in reversed(purchases):
+        #     if p.myCategory:
+        #         my_category = p.myCategory
+        #         break
 
         # Calculate average interval and standard deviation
         average_interval = None

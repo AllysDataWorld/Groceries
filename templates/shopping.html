@@ -42,7 +42,7 @@
 			<th>typical_quantity</th>
             <th>typical_price</th>
 			<th>last_updated</th>
-            <th>Actions</th>
+
         </tr>
         {% for task in tasks %}
             <tr>
@@ -60,11 +60,7 @@
                 <td>{{ task.typical_price }}</td>
 
                 <td>{{ task.last_updated.date().strftime('%Y-%m-%d') }}</td>
-                <td>
-                    <a href="/delete_item/{{task.id}}">Delete</a>
-                    <br>
-                    <a href="/update_items/{{task.id}}">Update</a>
-                </td>
+
             </tr>
         {% endfor %}
     </table>

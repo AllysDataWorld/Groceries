@@ -1,0 +1,40 @@
+
+{% extends 'base.html' %}
+
+
+{% block body %}
+<p><h1 align="center">Shopping <br> List </h1></p>
+
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+</div>
+</div>
+
+<div class="content">
+    {% if shopping_list|length < 1 %}
+        <h4 style="text-align: center">There are no items !</h4>
+
+    {% else %}
+
+        <h5 style="text-align: center">Shopping List: </h5>
+
+        <h5 style="text-align: center">OVERDUE ITEMS</h5>
+        {% for item in shopping_list %}
+            <p style="text-align: center">
+                {{ item['urgency'] }}: {{ item['item'] }} - Last bought {{ item['days_since_last'] }} days ago
+            </p>
+
+        {% endfor %}
+    {% endif %}
+{% endblock %}

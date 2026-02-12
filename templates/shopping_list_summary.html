@@ -1,0 +1,47 @@
+
+{% extends 'base.html' %}
+
+
+{% block body %}
+<p><h1 align="center">Shopping <br> Summary</h1></p>
+
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+</div>
+</div>
+
+<div class="content">
+    {% if summary|length < 1 %}
+        <h4 style="text-align: center">There are no items !</h4>
+
+    {% else %}
+
+        <h5 style="text-align: center">Shopping List Summary: </h5>
+        <p style="text-align: center">Total items: {{ summary['total_items'] }}</p>
+
+        <ul style="text-align: center; list-style-position: inside;">
+          <li>Overdue: {{ summary['overdue_count'] }}</li>
+          <li>Buy now: {{ summary['buy_now_count'] }}</li>
+          <li>Estimated cost: ${{ summary['estimated_cost'] }}</li>
+        </ul>
+
+        <h5 style="text-align: center">OVERDUE ITEMS</h5>
+        {% for item in summary['overdue_items'] %}
+            <p style="text-align: center">
+                {{ item['item'] }} (should have bought {{ (item['days_since_last'] - item['average_interval'])|round(0) }} days ago)
+            </p>
+
+        {% endfor %}
+    {% endif %}
+{% endblock %}
