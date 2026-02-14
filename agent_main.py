@@ -9,10 +9,11 @@ Created on Thu Dec  4 11:38:57 2025
 #from ai.agents import agents
 import utils as uts
 from ai.my_agent import retry_config
-
+from datetime import datetime
 from app import app
 import os 
 import csv
+from parse_ai_response import show_python_code_and_result
 
 from google.adk.agents.llm_agent import Agent
 from google.adk.models.google_llm import Gemini
@@ -22,6 +23,8 @@ from google.adk.tools import AgentTool, FunctionTool, google_search
 import asyncio
 from google.adk.runners import InMemoryRunner # or your specific runner
 
+from config import Config
+app.config.from_object(Config)
 
 # Get List Agent: Get the list of uploaded items
 get_list_agent = Agent(
@@ -31,16 +34,11 @@ get_list_agent = Agent(
         retry_options=retry_config
     ),
     description = "You can only use the tools available",
-    instruction="""You only job is to call uts.get_upload_items() and return ONLY the raw data 
+    instruction="""You only job is to call uts.get_upload_items_for_AI() and return ONLY the raw data 
                                    (the list of items and the upload date) as a single, clean JSON object. 
                                    Do NOT include any descriptive sentences or commentary in your final output.""",
-    tools = [uts.get_upload_items],
+    tools = [uts.get_upload_items_for_AI],
     output_key="Items_Bought",  # The result of this agent will be stored in the session state with this key.
-
-
-
-
-
 )
 
 # Classify Agent: Its job is to classify items
@@ -54,8 +52,9 @@ classifyagent = Agent(
     instruction="""Your goal is to create a dictionary:
                     1) You must first get the the list of items from {Items_Bought},  
                     2) for each item in the list, classify the item as perishable or nonperishable item.
-                    3) for each item that is perishable, get an estimated number of weeks the item will last.
-                    Your response should be a dictionary containing only be the item, your classification, and the estimated number of weeks.
+                    3) for each item that is perishable, get an estimated number of weeks the item will last. Call number EST_WEEKS.
+                    4) Get the upload_date from {Items_Bought} in the format '%Y/%m/%d' and create a predicted_expiry_date for each item based on EST_WEEKS. 
+                    Your response should be a dictionary containing only the following: item, your classification, upload_date, EST_WEEKS, predicted_expiry_date.
                     You can use the google search tool if needed for the classification.
                     You must use the google search tool for the number of weeks estimation.
                     If you dont know, then classify the item as IDK, and the estimated number of weeks as 99.
@@ -72,17 +71,17 @@ combined_flow = SequentialAgent(
     sub_agents=[get_list_agent, classifyagent],
 )
 
-    
+
 # from google.adk.flows import AgentFlow   #import didn't work
 # combined_flow = AgentFlow(
 #     name="Groceries_Classifier_Flow",
 #     agents=[
 #         get_list_agent,
-#         classifyagent 
+#         classifyagent
 #     ],
 #     # You may need an instruction for the flow itself
 #     instruction="Execute the first agent to get the list, then execute the second agent to classify the items.",
-#     output_key="final_classification"    
+#     output_key="final_classification"
 #  )
 
 
@@ -97,17 +96,18 @@ async def run_agent_query():
     # The await keyword must be inside an async function
     response = await runner.run_debug(my_prompt)
     print(response)
-    write_resp = os.path.join(app.config['OUT_AI'], 'ai_response.txt')
+    dt = (datetime.today().strftime('%Y-%m-%d_%H-%M-%S'))
+    response_file = f"ai_response_{dt}.txt"
+    write_resp = os.path.join(app.config['OUT_AI'], response_file)
     with open(write_resp, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(response)
-    
+
 # Run the async function using asyncio
 if __name__ == "__main__":
     asyncio.run(run_agent_query())
     print("✅ Agent Query Done.")
-    
-    
+
     
     
 # # Root Coordinator: Orchestrates the workflow by calling the sub-agents as tools.

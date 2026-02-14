@@ -8,9 +8,9 @@ groceries.db
 ai/AskedGoogleGemini/*.json
 templates/archive/
 go_shopping/more_code/*.py
+go_shopping/more_code/
 
 
-.gitignore
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

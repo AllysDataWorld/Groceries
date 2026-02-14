@@ -6,8 +6,10 @@ from datetime import datetime, date
 
 from database import db
 from app import app, logger
-from config import Config
 from models import Groceries, Grocery_Items, Grocery_TEMP_Items
+
+from config import Config
+app.config.from_object(Config)
 
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import or_, select
@@ -64,7 +66,8 @@ def get_filename():
 
 
 def get_upload_date():
-    """Get date of upload from OCR_text.csv. This is the date the user input on the website"""
+    """DONT THINK THIS WORKS: The date is no longer in OCR_text.csv.
+    Get date of upload from OCR_text.csv. This is the date the user input on the website"""
     from app import app
     try:
         temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
@@ -75,17 +78,17 @@ def get_upload_date():
     except FileNotFoundError:
         return "get_upload_date() File Note Found"
 
-def get_upload_items():
-    temp = os.path.join(app.config['OUT_AI'], 'send_to_ai.csv')
+def get_upload_items_for_AI():
+    ''''send_to_ai file contains the list of items uploaded with their upload date as the last element of the str'''
+    temp = os.path.join(app.config['OUT_AI'], 'send_to_ai.txt')
     with open(temp, 'r') as fin:
-        list_of_items = fin.read().splitlines()
-    upload_date = get_upload_date()
+        list_of_items = fin.read().split(',')
+    upload_date = list_of_items.pop()
     return list_of_items, upload_date
 
 def get_VERBOSE():
     #used in route /guess_label_for_new_items/ because I dont want to pass a parameter
     return Config.VERBOSE
-
 
 def sum_price_list(price_list):
     """Calculate sum of prices in list."""
@@ -172,9 +175,12 @@ def add_grocery_item(item_data):
 
 
 def bulk_add_grocery_item(temp_items):
-    # Calculate totals and create main receipt record
+    # Save to Grocery_Items and Grocery tables
+
     total_price = sum([item.price for item in temp_items])
     store_name = temp_items[0].storeName
+    upload_date = temp_items[0].recepitDate
+    send_to_ai = []
 
     temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
     with open(temp_ocr, 'r') as f:
@@ -182,15 +188,10 @@ def bulk_add_grocery_item(temp_items):
     
     receipt_id = add_raw_receipt(raw_text, store_name, total_price, get_filename())
        
-    send_to_ai = [temp_item.myItem for temp_item in temp_items]
-    output_ai = os.path.join(app.config['OUT_AI'], 'send_to_ai.csv')
-    with open(output_ai, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(send_to_ai)
-
     # Bulk insert items
     grocery_items = []
     for temp_item in temp_items:
+        send_to_ai.append(temp_item.myItem)
         item_data = {
             'storeItem': temp_item.storeItem,
             'myCategory': temp_item.myCategory,
@@ -210,6 +211,15 @@ def bulk_add_grocery_item(temp_items):
     Grocery_TEMP_Items.query.delete()
     db.session.commit()
     db.session.expunge_all()  # Add this line
+
+    output_ai = os.path.join(app.config['OUT_AI'], 'send_to_ai.txt')
+    f = open(output_ai, 'w')
+    for line in send_to_ai:
+        f.write(str(line))
+        f.write(",")
+    f.write(upload_date.strftime('%Y/%m/%d'))
+    f.close()
+
     return grocery_items
 
 
@@ -385,7 +395,7 @@ def process_uploaded_file(file_path, store, filename, receipt_date, bulk_process
     temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
     with open(temp_ocr, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow([receipt_date, filename, store, raw_text])
+        writer.writerow([filename, store, raw_text])
 
     df_sortorder = pd.read_csv(os.path.join(app.config['OUTPUT_FOLDER'], 'sortorder_df.csv'))
     item_to_sort = {row['item']: row['sort_order'] for _, row in df_sortorder.iterrows() if row['CAT'] == 'ITEM'}
