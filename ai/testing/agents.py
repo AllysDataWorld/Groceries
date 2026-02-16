@@ -6,7 +6,6 @@ Created on Wed Dec  3 09:28:07 2025
 """
 from my_agent import retry_config
 
-
 from google.adk.agents.llm_agent import Agent
 from google.adk.models.google_llm import Gemini
 from google.adk.tools import AgentTool, FunctionTool, google_search
@@ -29,8 +28,6 @@ classify_agent = Agent(
 )
 
 
-
-
 # Research Agent: Its job is to use the google_search tool and present findings.
 research_agent = Agent(
     name="ResearchAgent",
@@ -46,9 +43,6 @@ research_agent = Agent(
 )
 
 
-
-
-
 # Calendar Agent: Its job is to classify items
 Calendar_agent = Agent(
     name="CalendarAgent",
@@ -61,5 +55,3 @@ Calendar_agent = Agent(
     #tools=[google_calender],
     output_key="Calendar_findings",  # The result of this agent will be stored in the session state with this key.
 )
-
-

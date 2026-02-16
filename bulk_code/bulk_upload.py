@@ -22,6 +22,8 @@ from bulk_code import bulk_utls as b_uts
 app.app_context().push()
 db.create_all()
 
+app.config.from_object(Config)
+
 # Your bulk upload code here...
 
 # Defining paths to tesseract.exe and the image we would be using 

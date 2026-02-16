@@ -9,23 +9,29 @@ here
 
 #from ai.agents import agents
 import utils as uts
-from ai.my_agent import retry_config
+from utils import get_upload_items_for_AI
+
+
+from ai.testing.my_agent import retry_config
 from datetime import datetime
 from app import app
 import os 
 import csv
-from parse_ai_response import show_python_code_and_result
+import json
+import time
+#from parse_ai_response import show_python_code_and_result
+
+from config import Config
+app.config.from_object(Config)
 
 from google.adk.agents.llm_agent import Agent
 from google.adk.models.google_llm import Gemini
+from google.adk.tools import google_search
 #from google.adk.responses import AgentResponse # You may need this import
-from google.adk.tools import AgentTool, FunctionTool, google_search
 
 import asyncio
 from google.adk.runners import InMemoryRunner # or your specific runner
 
-from config import Config
-app.config.from_object(Config)
 
 # Get List Agent: Get the list of uploaded items
 get_list_agent = Agent(
@@ -35,10 +41,10 @@ get_list_agent = Agent(
         retry_options=retry_config
     ),
     description = "You can only use the tools available",
-    instruction="""You only job is to call uts.get_upload_items_for_AI() and return ONLY the raw data 
+    instruction="""You only job is to call get_upload_items_for_AI() and return ONLY the raw data 
                                    (the list of items and the upload date) as a single, clean JSON object. 
                                    Do NOT include any descriptive sentences or commentary in your final output.""",
-    tools = [uts.get_upload_items_for_AI],
+    tools = [get_upload_items_for_AI],
     output_key="Items_Bought",  # The result of this agent will be stored in the session state with this key.
 )
 
@@ -62,51 +68,51 @@ classifyagent = Agent(
                     """,
     tools = [google_search],
     output_key="classify_findings",  # The result of this agent will be stored in the session state with this key.
-
 )
     
     
-from google.adk.agents import Agent, SequentialAgent
+from google.adk.agents import SequentialAgent
 combined_flow = SequentialAgent(
     name="Groceries_Classifier_Flow",
     sub_agents=[get_list_agent, classifyagent],
 )
 
-
-# from google.adk.flows import AgentFlow   #import didn't work
-# combined_flow = AgentFlow(
-#     name="Groceries_Classifier_Flow",
-#     agents=[
-#         get_list_agent,
-#         classifyagent
-#     ],
-#     # You may need an instruction for the flow itself
-#     instruction="Execute the first agent to get the list, then execute the second agent to classify the items.",
-#     output_key="final_classification"
-#  )
-
-
-my_prompt = "what is your classification for the list of items"
+my_prompt = "get the classification for the list of items and then find the predicted_expiry_date for each item"
 
 runner = InMemoryRunner(agent=combined_flow)
 
 # Define an async function to contain the await call
-
-
 async def run_agent_query():
-    # The await keyword must be inside an async function
-    response = await runner.run_debug(my_prompt)
+    response = await runner.run_debug(my_prompt) # The await keyword must be inside an async function
+    print("type: ", type(response))
     print(response)
+
     dt = (datetime.today().strftime('%Y-%m-%d_%H-%M-%S'))
     response_file = f"ai_response_{dt}.txt"
-    write_resp = os.path.join(app.config['OUT_AI'], response_file)
-    with open(write_resp, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(response)
+    # write_resp = os.path.join(app.config['OUT_AI'], response_file)
+    # with open(write_resp, 'w', newline='') as csvfile:
+    #         writer = csv.writer(csvfile)
+    #         writer.writerow(response)
+
+    json_path = os.path.join(app.config['OUT_AI'], response_file)
+    try:
+        with open(json_path, "w") as f:
+            json.dump([e.model_dump() for e in response], f, indent=2)
+        print("\nCompleted Dump @", json_path)
+    except:
+        print("EXCEPTION occured while creating json dump file")
+
+    res = response[0] #response[0]: TYPE:<class 'google.adk.events.event.Event'>
+    print(f"response[0]: TYPE:{type(res)} \n{"-"*10}" )
+
 
 # Run the async function using asyncio
 if __name__ == "__main__":
+    start_main = time.time()
     asyncio.run(run_agent_query())
+    end_main = time.time()
+    duration = round(end_main - start_main, 2)
+    print("Duration: ", duration)
     print("✅ Agent Query Done.")
 
     
