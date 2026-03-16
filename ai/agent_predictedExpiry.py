@@ -103,7 +103,7 @@ combined_flow = SequentialAgent(
 )
 print("✅ Groceries_Classifier_Flow created.")
 
-my_prompt = "get the classification for the list of items and then find the predicted_expiry_date for each item"
+my_prompt = "get the classification for the list of items and then calculate the predicted_expiry_date for each item"
 
 runner = InMemoryRunner(agent=combined_flow)
 

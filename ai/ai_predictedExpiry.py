@@ -9,7 +9,7 @@ def ai_predictedExpiry():
     """Run the agent and read its response"""
 
     # Import and execute the agent
-    from ai.agent_main import run_agent_query
+    from ai.agent_predictedExpiry import run_agent_query
     asyncio.run(run_agent_query())  # This blocks until the agent finishes
 
     # Now read the freshly written response file
