@@ -4,6 +4,9 @@
 *.bat
 *.log
 *.png
+*.ipynb_checkpoints
+*.ipynb
+
 .idea/
 static/uploads/
 groceries.db
@@ -11,6 +14,7 @@ ai/AskedGoogleGemini/*.json
 output/
 output/out_ai/
 ai/testing/
+ai/helloworld/
 templates/archive/
 go_shopping/more_code/*.py
 go_shopping/more_code/

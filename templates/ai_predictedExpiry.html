@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+<p><h1 align="center">AI <br> Table </h1></p>
+
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+</div>
+</div>
+
+
+{% if error %}
+    <p style="color:red;">{{ error }}</p>
+
+{% elif table_data %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Classification</th>
+                <th>Upload Date</th>
+                <th>EST Weeks</th>
+                <th>Predicted Expiry</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in table_data %}
+            <tr>
+                <td>{{ row.item }}</td>
+                <td>{{ row.classification }}</td>
+                <td>{{ row.upload_date }}</td>
+                <td>{{ row.EST_WEEKS }}</td>
+                <td>{{ row.predicted_expiry_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No data found.</p>
+{% endif %}
+
+{% endblock %} <!--end body-->

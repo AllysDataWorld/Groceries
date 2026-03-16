@@ -298,7 +298,7 @@ Added the line "app.config.from_object(Config)" because CONFIG wasn't getting al
 
 
 	------------COMMIT:AI--------
-git commit -m  "Saving AI response to read from the website"
+git commit -m  "Saving AI response to later read from the website"
 The main commit is the grumpy_agent.py; it called a helloworld agent and saves the response, and uses code from google's website to read parts of the response.
 This is a toy example to be used for agent_main. Ran into my 'daily requests limits'
 bulk_code/bulk_upload.py: Added the line "app.config.from_object(Config)" because CONFIG wasn't getting all the keys.
@@ -312,7 +312,31 @@ bulk_code/bulk_upload.py: Added the line "app.config.from_object(Config)" becaus
         moved:    ai/agents.py -> ai/testing/agents.py
         moved:    ai/my_agent.py -> ai/testing/my_agent.py
 
+	------------COMMIT:AI--------
+git commit -m  "Agent retrieves facts about food items and displays it on the website"
+User Uploads new receipt. Once that receipt is saved to the Database, user clicks on Predict Expiry Tab:
+route /ai_response/ calls ai_predictedExpiry() in ai_predictedExpiry.py and then brings up 'ai_predictedExpiry.html'
 
+        modified:   .gitignore
+        modified:   GIT_COMMITS.md
+        modified:   README.md
+        modified:   ai/agent_main.py                        -> call AI Agent and write JSON file
+        new file:   ai/ai_predictedExpiry.py                -> read JSON file and send to router
+        modified:   config.py
+        modified:   routes.py
+        new file:   templates/ai_predictedExpiry.html       -> shows food facts from AI in table form
+        modified:   templates/base.html
+
+
+
+
+
+
+
+
+	------------COMMIT:<testing>--------
+git commit -m  "No Changes. Testing branch"
+I'm doing a test to see how I would use a branch. 
 
 
 Tasks:

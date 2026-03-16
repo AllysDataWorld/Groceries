@@ -43,6 +43,20 @@ def fake_populate_all():
                            current_date=uts.get_date_from_TEMP_ITEMS_DB().date(),
                            filename=filename, tasks=temp_items)
 
+# @app.route("/ai_response/")
+# def ai_response():
+#     from ai.ai_predictedExpiry import get_AI_response
+#     """Display the ai resposne."""
+#     response = get_AI_response() #no file given
+#     return render_template('ai.html', response=response)
+
+
+@app.route("/ai_predictedExpiry/")
+def ai_predictedExpiry():
+    from ai.ai_predictedExpiry import ai_predictedExpiry
+    """Display the ai resposne."""
+    response, error = ai_predictedExpiry() #no file given
+    return render_template('ai_predictedExpiry.html', table_data=response, error=error)
 
 
 @app.route('/guess_label_for_new_items/')
