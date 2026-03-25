@@ -3,7 +3,7 @@ import os
 from datetime import date
 
 from app import app, logger
-from models import Groceries, Grocery_Items, Grocery_TEMP_Items, Smart_Shopping, Shopping_List_Settings
+from models import Groceries, Grocery_Items, Grocery_TEMP_Items, Smart_Shopping, Shopping_List_Settings, Food_Expiry
 
 import utils as uts
 from database import db
@@ -51,12 +51,18 @@ def fake_populate_all():
 #     return render_template('ai.html', response=response)
 
 
-@app.route("/ai_predictedExpiry/")
-def ai_predictedExpiry():
-    from ai.ai_predictedExpiry import ai_predictedExpiry
-    """Display the ai resposne."""
-    response, error = ai_predictedExpiry() #no file given
-    return render_template('ai_predictedExpiry.html', table_data=response, error=error)
+# @app.route("/ai_predictedExpiry/")
+# def ai_predictedExpiry():
+#     from ai.ai_predictedExpiry import ai_predictedExpiry
+#     """Display the ai resposne."""
+#     response, error = ai_predictedExpiry() #no file given
+#     return render_template('ai_predictedExpiry.html', table_data=response, error=error)
+
+
+@app.route("/food_exp/")
+def food_exp():
+    items = Food_Expiry.query.order_by(Food_Expiry.item.desc()).all()
+    return render_template('food_exp.html', table_data=items)
 
 
 @app.route('/guess_label_for_new_items/')
@@ -134,16 +140,16 @@ def save_grocery_item():
         flash("Please complete all required fields before saving:")
         for  item in (unpopulated):
             flash(f"> My_Label or My_Category is missing: {item.storeItem}")
-        return redirect('/last_upload/')
+        return redirect('/last_upload_web/')
     
     temp_items = Grocery_TEMP_Items.query.all()
     if not temp_items:
         flash("No items to save")
         return redirect('/upload/')
   
-    grocery_items = uts.bulk_add_grocery_item(temp_items)
+    grocery_items, item_dic = uts.bulk_add_grocery_item(temp_items)
 
-    message = f"Inserted {len(grocery_items)} items into Grocery_Items"
+    message = f"Inserted {len(grocery_items)} items into Grocery_Items. See DIC:{item_dic}"
     logger.info(message)
     print (message)
     flash(f"Successfully saved {len(grocery_items)} items")
@@ -395,7 +401,7 @@ def delete_temp_item(id):
     try:
         db.session.delete(item)
         db.session.commit()
-        return redirect('/last_upload/')
+        return redirect('/last_upload_web/')
     except Exception as e:
         db.session.rollback()
         return 'Error deleting temp item:',e
@@ -529,7 +535,7 @@ def update_temp_item(id):
 
         try:
             db.session.commit()
-            return redirect('/last_upload/')
+            return redirect('/last_upload_web/')
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error updating temp item: {e}")
@@ -614,7 +620,7 @@ def check_last_upload():
         return redirect('/upload/')
     else:
         flash("You must delete or save the existing rows first")
-        return redirect('/last_upload/')
+        return redirect('/last_upload_web/')
 
 @app.route('/export_distinct_items/')
 def export_distinct_items():

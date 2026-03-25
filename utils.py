@@ -2,11 +2,12 @@ import os
 import re
 import pytz
 import csv
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from database import db
 from app import app, logger
-from models import Groceries, Grocery_Items, Grocery_TEMP_Items
+from ai.ai_predictedExpiry import ai_predictedExpiry
+from models import Groceries, Grocery_Items, Grocery_TEMP_Items, Food_Expiry
 
 from config import Config
 app.config.from_object(Config)
@@ -176,11 +177,13 @@ def add_grocery_item(item_data):
 
 def bulk_add_grocery_item(temp_items):
     # Save to Grocery_Items and Grocery tables
-
+    VERBOSE = True
     total_price = sum([item.price for item in temp_items])
     store_name = temp_items[0].storeName
     upload_date = temp_items[0].recepitDate
-    send_to_ai = []
+
+    all_food_items = []
+    item_dic = {}
 
     temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
     with open(temp_ocr, 'r') as f:
@@ -191,7 +194,7 @@ def bulk_add_grocery_item(temp_items):
     # Bulk insert items
     grocery_items = []
     for temp_item in temp_items:
-        send_to_ai.append(temp_item.myItem)
+        all_food_items.append(temp_item.myItem)
         item_data = {
             'storeItem': temp_item.storeItem,
             'myCategory': temp_item.myCategory,
@@ -212,19 +215,194 @@ def bulk_add_grocery_item(temp_items):
     db.session.commit()
     db.session.expunge_all()  # Add this line
 
+
+    for line in all_food_items:
+        item_EST_WEEKS = get_EST_WEEKS(line) #from DB
+        item_dic[line] = item_EST_WEEKS
+        if VERBOSE:  print(f"food_item:{line} -> DB found {item_EST_WEEKS} EST_WEEKS")
+
+
+    new_item = []
+    for item, wks in item_dic.items():
+        if  wks == 0:
+            new_item.append(item)
+
+    if VERBOSE:  print(f"There are {len(new_item)} new times (that are not currently in the db)")
     output_ai = os.path.join(app.config['OUT_AI'], 'send_to_ai.txt')
     f = open(output_ai, 'w')
-    for line in send_to_ai:
+    for line in new_item:
+        print("Send to ai:", line)
         f.write(str(line))
         f.write(",")
     f.write(upload_date.strftime('%Y/%m/%d'))
     f.close()
 
-    return grocery_items
+    if len(new_item) > 0:
+        response, error = ai_predictedExpiry() #no file given
+        print(f"response:{response}, error:{error}")
+
+        summary = populate_food_expiry_from_json()
+        if VERBOSE:
+            print("Added New Food Items to Food Expiry DB:")
+            print(f"Added:   {summary['added']}")
+            print(f"Skipped: {summary['skipped']}")
+            print(f"Errors:  {summary['errors']}")
+
+    print(f"Add {len(item_dic)} Existing Food Items to Food Expiry DB:")
+    populate_food_expiry_existing_items(item_dic, upload_date)
+
+    return grocery_items, item_dic
 
 
-  
-  
+def get_EST_WEEKS(search):
+    """Decide if db already has the EST_WEEKS for item"""
+    item_EST_WEEKS = db.session.query(Food_Expiry.EST_WEEKS)\
+        .distinct()\
+        .filter(Food_Expiry.item.like(f'%{search}%'))\
+        .limit(1)\
+        .all()
+    if len(item_EST_WEEKS) != 0:
+        WKS = item_EST_WEEKS[0][0]
+    else:
+        WKS = 0
+    return WKS
+# item_EST_WEEKS = get_EST_WEEKS(search)
+
+
+def parse_date(date_str: str | None) -> datetime:
+    DATE_FMT = "%Y/%m/%d"
+    if not date_str:
+        return datetime.utcnow()
+    try:
+        return datetime.strptime(date_str, DATE_FMT)
+    except ValueError:
+        return datetime.utcnow()
+
+def populate_food_expiry_from_json() -> dict:
+    """
+    Reads a flat JSON array of food items and populates the Food_Expiry table.
+
+    Expected JSON structure (one object per item):
+        [
+            {
+                "item":                  "eggs",
+                "classification":        "perishable",
+                "upload_date":           "2026/03/16",
+                "EST_WEEKS":             4,
+                "predicted_expiry_date": "2026/04/13"
+            },
+            ...
+        ]
+
+    Args:
+        json_path:  Path to the JSON file.
+
+    Returns:
+        A dict with keys "added", "skipped", and "errors".
+    """
+    import json
+
+    food_facts = os.path.join(app.config['OUT_AI'], app.config['AI_FOOD_FACTS_DUMP'])
+    with open(food_facts, "r") as f:
+        items: list[dict] = json.load(f)
+
+    results = {"added": [], "skipped": [], "errors": []}
+
+    print(f"populate foodexp db from JSON -> ITEMS:{items}")
+    for item_data in items:
+        item_name = item_data.get("item")
+
+        if not item_name:
+            results["errors"].append({"data": item_data, "reason": "Missing 'item' field"})
+            continue
+
+        # Skip if already in the DB (item column is unique)
+        # if Food_Expiry.query.filter_by(item=item_name).first():
+        #     print("skipped:", item_name)
+        #     results["skipped"].append(item_name)
+        #     continue
+
+        record = Food_Expiry(
+            item                  = item_name,
+            classification        = item_data.get("classification", "unknown"),
+            EST_WEEKS             = int(item_data.get("EST_WEEKS", 0)),
+            purchase_date         = parse_date(item_data.get("upload_date")),
+            predicted_expiry_date = parse_date(item_data.get("predicted_expiry_date")),
+        )
+
+        db.session.add(record)
+        results["added"].append(item_name)
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        raise RuntimeError(f"Database commit failed: {exc}") from exc
+
+    return results
+# ---------------------------------------------------------------------------
+# Example usage inside a Flask app context
+# ---------------------------------------------------------------------------
+# from app import app, db
+# from models import Food_Expiry
+#
+# with app.app_context():
+#     summary = populate_food_expiry_from_json("ai_food_facts_dump.json")
+#     print(f"Added:   {summary['added']}")
+#     print(f"Skipped: {summary['skipped']}")
+#     print(f"Errors:  {summary['errors']}")
+
+
+
+def populate_food_expiry_existing_items(existing_item_dic, upload_date) -> dict:
+    """
+    reads items from Food_Expiry db and Food_Expiry table.
+    """
+
+    print(f"There are {len(existing_item_dic)} items in the existing_item_list")
+    for item, wks in existing_item_dic.items():
+        record = Food_Expiry(
+            item                  = item,
+            classification        = "perishable",
+            EST_WEEKS             = int(wks),
+            purchase_date         = upload_date,
+            predicted_expiry_date = upload_date + timedelta(days=7*wks)
+        )
+        db.session.add(record)
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        raise RuntimeError(f"Database commit failed: {exc}") from exc
+
+    return None
+# ---------------------------------------------------------------------------
+# Example usage inside a Flask app context
+# ---------------------------------------------------------------------------
+# from app import app, db
+# from models import Food_Expiry
+#
+# with app.app_context():
+#     summary = populate_food_expiry_from_json("ai_food_facts_dump.json")
+#     print(f"Added:   {summary['added']}")
+#     print(f"Skipped: {summary['skipped']}")
+#     print(f"Errors:  {summary['errors']}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def find_store_item_matches(item):
     """Find matching items in Grocery_Items table."""
     return Grocery_Items.query.filter(
@@ -440,7 +618,6 @@ def print_log(mystr, logger, header=False, footer=False):
     return None
 
 def guess_labels(logger, VERBOSE):
-    VERBOSE=True
     """Guess labels for uploaded items based on purchase history."""
     if VERBOSE: print_log("guess_labels", logger, header=True, footer=False)
 
@@ -503,8 +680,9 @@ def guess_labels(logger, VERBOSE):
                 logger.error(f"Error updating item: {e}")
         else:
             # Frequent item
-            for m in matches:
-                print("> Matches:", m.storeItem)
+            if VERBOSE:
+                for m in matches:
+                    print("> Matches:", m.storeItem)
             match = matches[0]  # Use most recent
             keep = temp_item.storeItem
             temp_item.myItem = match.myItem

@@ -7,6 +7,7 @@
 #         print(f"Matches for {storeItem}: {match.storeItem}")
 
 from models import Grocery_Items, Smart_Shopping
+import pandas as pd
 
 def print_n_log(mystr, logger, header=False, footer=False):  # See print_log in utils
     logger.info(mystr)

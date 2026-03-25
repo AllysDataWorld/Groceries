@@ -75,3 +75,14 @@ class Shopping_List_Settings(db.Model):
 
     def __repr__(self):
         return f'<Shopping_List_Settings {self.myCategory}: {self.include_in_shopping_list}>'
+
+class Food_Expiry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    item = db.Column(db.String(200), nullable=False, unique=False, index=True)
+    classification = db.Column(db.String(200), nullable=False, unique=False, index=True)
+    EST_WEEKS = db.Column(db.Integer, nullable=False, unique=False, index=True)
+    predicted_expiry_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    purchase_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Food_Expiry {self.item}: {self.EST_WEEKS}>'

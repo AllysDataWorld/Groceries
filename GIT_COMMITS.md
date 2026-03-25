@@ -327,6 +327,42 @@ route /ai_response/ calls ai_predictedExpiry() in ai_predictedExpiry.py and then
         new file:   templates/ai_predictedExpiry.html       -> shows food facts from AI in table form
         modified:   templates/base.html
 
+	------------COMMIT:AI--------
+git commit -m  "refactored ai"
+        renamed:    ai/agent_main.py -> ai/agent_predictedExpiry.py
+        modified:   ai/ai_predictedExpiry.py
+
+
+
+	------------COMMIT:AI--------
+git commit -m  "Updated NavBar, Created new model, AI Logic, fixed ai bug"
+First Fix the BUG: ai_food_facts.csv was only saving the last item.
+Updated NavBar to include dropdowns.
+Created a new database table, to capture the food and its expiry dates
+Removed the old functionality of ai_predictedExpiry() being called from NavBar
+
+Changes to AI logic: Only new items that were not previously classified go to the AI
+OOPS: accidently deleted all rows from the database by running the code:
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+
+        modified:   models.py                   --> Added a new model: Food_Expiry
+        modified:   ai/ai_predictedExpiry.py    --> Updated logic to reduce AI calls
+        modified:   config.py                   --> new JSON and text files
+        modified:   utils.py                    --> four new functions
+                                                    get_EST_WEEKS(search)
+                                                    parse_date(date_str: str | None) 
+                                                    populate_food_expiry_from_json() 
+                                                    populate_food_expiry_existing_items(existing_item_dic, upload_date)
+        modified:   routes.py                   --> no longer called from the NavBar: ai_predictedExpiry() 
+        modified:   go_shopping/shopping_functions.py   --> import statement
+        new file:   templates/ai.html
+        modified:   templates/base.html         --> Add DropDown to NavBar
+        new file:   templates/food_exp.html
+        deleted:    ai/grumpy_agent.py
+
+
 
 
 
@@ -340,12 +376,12 @@ I'm doing a test to see how I would use a branch.
 
 
 Tasks:
-## TODO: tried to add get_receipes --> see agent_main - receipes()
+## TODO: when you upload a new receipt, it should fill empty (secondary) by looking up the txt file.
+-Guessing: Use the CSV to help guess. Think about the priority: exact matches with your database, fuzzy with your db, then other csv?
+## TODO: tried to have the agent get receips too but had Agent broke.
 ## TODO: have website display AI results
 -Understand where I was last time: agent_main.py
--Possibly refactor/reorganize
 -Get receipes based on the last receipt bought.
--Guessing: Use the CSV to help guess. Think about the priority: exact matches with your database, fuzzy with your db, then other csv?
 
 
 
