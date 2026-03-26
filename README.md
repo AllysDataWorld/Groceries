@@ -50,9 +50,3 @@ Now each item should have dates.
 
 
 
-
-get_EST_WEEKS(search)
-parse_date(date_str: str | None) 
-populate_food_expiry_from_json() 
-populate_food_expiry_existing_items(existing_item_dic, upload_date)
-

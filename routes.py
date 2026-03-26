@@ -352,12 +352,30 @@ def delete_all():
         Grocery_Items.query.delete()
         Groceries.query.delete()
         Grocery_TEMP_Items.query.delete()
+        Food_Expiry.query.delete()
+        
         db.session.commit()
         return render_template('upload.html')
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error deleting all data: {e}")
-        return 'Error deleting data'
+        logger.error(f"Error deleting 4 tables: {e}")
+        return 'Error delete_all'
+
+@app.route('/delete_food_expiry/')
+def delete_food_expiry():
+    """Delete all new items."""
+    try:
+        Food_Expiry.query.delete()
+        db.session.commit()
+        return redirect('/upload/')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting food_expiry: {e}")
+        return 'Error delete_food_expiry:', e
+
+
+
+
 
 @app.route('/delete_all_Grocery_TEMP_Items/')
 def delete_all_temp_items():
@@ -368,6 +386,7 @@ def delete_all_temp_items():
         return redirect('/upload/')
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error in delete_all_Grocery_TEMP_Items: {e}")
         return 'Error deleting temp items:', e
 
 @app.route('/delete/<int:id>/')
@@ -380,6 +399,7 @@ def delete_receipt(id):
         return redirect('/')
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error in delete: {e}")
         return 'Error deleting receipt:', e
 
 @app.route('/delete_item/<int:id>/')
@@ -392,7 +412,8 @@ def delete_item_route(id):
         return redirect('/items/')
     except Exception as e:
         db.session.rollback()
-        return 'Error deleting item:', e
+        logger.error(f"Error in delete_item: {e}")
+        return 'Error deleting Grocery_Items:', e
 
 @app.route('/delete_temp_item/<int:id>/')
 def delete_temp_item(id):
@@ -404,6 +425,7 @@ def delete_temp_item(id):
         return redirect('/last_upload_web/')
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error in delete_temp_item: {e}")
         return 'Error deleting temp item:',e
     
     
@@ -500,7 +522,7 @@ def update_item(id):
     
     return render_template('update_item.html', task=item)
 
-@app.route('/update_items_temp/<int:id>/', methods=['GET', 'POST'])
+@app.route('/update_temp_item/<int:id>/', methods=['GET', 'POST'])
 def update_temp_item(id):
     """Update Grocery_TEMP_Items table."""
     item = Grocery_TEMP_Items.query.get_or_404(id)
@@ -512,7 +534,7 @@ def update_temp_item(id):
         with open(updated, 'a', newline='') as csvfile:
                 updatewriter = csv.writer(csvfile)
                 updatewriter.writerow("")
-                updatewriter.writerow(["ROUTE: /update_items_temp_db/"])
+                updatewriter.writerow(["ROUTE: /update_temp_item/"])
         
                 updatewriter.writerow(["Update GroceriesITEMS ORIG ROW",
                     item.storeCategory,

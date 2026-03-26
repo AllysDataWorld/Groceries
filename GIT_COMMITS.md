@@ -363,6 +363,21 @@ OOPS: accidently deleted all rows from the database by running the code:
         deleted:    ai/grumpy_agent.py
 
 
+	------------COMMIT:GENERAL--------
+git commit -m  "Bug Fixes"
+Update bug - Website crashed if item was updated.
+Filename bug - the picture kept disappearing. this was because the get_filename() needed to be updated
+Delete Food_Expiry: created routes and links in Delete.html to delete the table. Updated other delete routes to be more consistant.
+
+        modified:   routes.py							--> Update Temp Item bug + Added Delete Food_Expiry
+        modified:   templates/Last_upload_phone.html	--> Update Temp Item bug
+        modified:   templates/Last_upload_web.html		--> Update Temp Item bug
+        modified:   templates/update_items_temp.html	--> Update Temp Item bug
+        modified:   templates/base.html					--> labels updated
+        modified:   utils.py							--> filename bug
+        modified:   templates/delete.html
+
+
 
 
 

@@ -55,7 +55,7 @@
                         <td>{{ task.recepitDate.date().strftime('%Y-%m-%d') }}</td>
                         <td>{{ task.recepitDate.time().strftime("%H:%M:%S") }}</td>
                         <td>
-                            <a href="/update_items_temp_db/{{task.id}}">Update</a>
+                            <a href="/update_temp_item/{{task.id}}">Update</a>
                         </td>
                     </tr>
                 {% endfor %}

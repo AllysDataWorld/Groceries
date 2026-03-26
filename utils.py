@@ -60,7 +60,7 @@ def get_filename():
         temp_ocr = os.path.join(app.config['OUTPUT_FOLDER'], 'OCR_text.csv')
         with open(temp_ocr, 'r') as fin:
             content = fin.read()
-            filename = content.split(',')[1]
+            filename = content.split(',')[0]
         return filename if filename else "get_filename() FAILED"
     except FileNotFoundError:
         return "get_filename() File Note Found"
