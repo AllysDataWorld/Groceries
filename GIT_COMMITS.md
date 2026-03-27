@@ -377,7 +377,18 @@ Delete Food_Expiry: created routes and links in Delete.html to delete the table.
         modified:   utils.py							--> filename bug
         modified:   templates/delete.html
 
+	------------COMMIT:GENERAL--------
+git commit -m  "Cosmetic GUI Updates"
+GUI updates: Delete page was split into delete.html and settings.html
 
+        modified:   utils.py                            --> temp commented ai call when user saves
+        modified:   routes.py                           --> created new route for settings.html
+        modified:   templates/Last_upload_phone.html    --> h1 updates
+        modified:   templates/Last_upload_web.html      --> h1 updates
+        modified:   templates/home.html                 --> added links in boxes
+        modified:   templates/base.html                 --> updated labels for links
+        modified:   templates/delete.html               --> delete tabel links only
+        new file:   templates/settings.html             --> save CSV link only: "Distinct_Grocery_Items.csv"
 
 
 

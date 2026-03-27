@@ -5,9 +5,18 @@ FLASK website: Upload the receipt
 or
 BULK Upload -> Searches receipt files in specified folder (within RUN_BULK_UPLOAD.py)
 >> If using Bulk version, it will upload the receipt and ask the user to label all empty cells using the website
+-> If the date is not found on the receipt, it'll will assume todays date, and alert/confirm with the user. 
  
-AI: 
-User Experience: User Uploads new receipt. Once that receipt is saved to the Database, user clicks on Predict Expiry Tab:
+UPLOAD:
+	> OCR and then writes 'OCR_text.csv': [filename, store, raw_text]
+	> bought_once, frequent_items = guess_labels() rename this to guess_labels_via_Grocery_Items
+		> find_store_item_matches(storeItem) rename this to find_store_item_matches_via_Grocery_Items
+
+Last Upload WEBSITE has a Button that calls: guess_label_for_new_items()... which does a filter: get_unlabeled_items
+ 
+ 
+AI: COMMENTED OUT:
+User Experience: User Uploads new receipt and saves to the Database:
 BACKEND ROUTE: /ai_response/ calls ai_predictedExpiry() in ai_predictedExpiry.py and then brings up 'ai_predictedExpiry.html'
 LOGIC: ai_predictedExpiry(): calls [agent_main.py](ai/agent_predictedExpiry.py) the Agent that writes a JSON file:
     The grocery item, [perishable or non-perishable], upload_date, estimated number of weeks item will last, predicted_expiry_date.

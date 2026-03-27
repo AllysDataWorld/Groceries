@@ -581,6 +581,13 @@ def home():
 def delete_page():
     """Delete operations page."""
     return render_template('delete.html')
+    
+@app.route('/settings/')
+def settings():
+    """Delete operations page."""
+    return render_template('settings.html')    
+    
+    
 
 @app.route('/')
 def index():

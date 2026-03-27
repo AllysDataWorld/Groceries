@@ -66,7 +66,7 @@ def get_filename():
         return "get_filename() File Note Found"
 
 
-def get_upload_date():
+def get_upload_date(): #See get_date_from_TEMP_ITEMS_DB()
     """DONT THINK THIS WORKS: The date is no longer in OCR_text.csv.
     Get date of upload from OCR_text.csv. This is the date the user input on the website"""
     from app import app
@@ -238,8 +238,8 @@ def bulk_add_grocery_item(temp_items):
     f.close()
 
     if len(new_item) > 0:
-        response, error = ai_predictedExpiry() #no file given
-        print(f"response:{response}, error:{error}")
+        #response, error = ai_predictedExpiry() #no file given
+        #print(f"response:{response}, error:{error}")
 
         summary = populate_food_expiry_from_json()
         if VERBOSE:
@@ -248,8 +248,8 @@ def bulk_add_grocery_item(temp_items):
             print(f"Skipped: {summary['skipped']}")
             print(f"Errors:  {summary['errors']}")
 
-    print(f"Add {len(item_dic)} Existing Food Items to Food Expiry DB:")
-    populate_food_expiry_existing_items(item_dic, upload_date)
+    #print(f"Add {len(item_dic)} Existing Food Items to Food Expiry DB:")
+    #populate_food_expiry_existing_items(item_dic, upload_date)
 
     return grocery_items, item_dic
 

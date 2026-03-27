@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<p><h1 align="center">Delete Groceries</h1></p>
+</br>
+
+    <div class="container">
+        <div class="row">
+            <div>
+                <p>
+                    {% with messages = get_flashed_messages() %}
+                      {% if messages %}
+                        <ul class="flashes">
+                        {% for message in messages %}
+                          <li>{{ message }}</li>
+                        {% endfor %}
+                        </ul>
+                      {% endif %}
+                    {% endwith %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+<hr>
+<p><h3 align="center">Export Distinct Items</h3></p>
+<p align="center"><a href="/export_distinct_items/">Export Distinct Items to CSV</a></p>
+<hr>
+
+    
+{% endblock %}
