@@ -64,16 +64,16 @@ classifyagent = Agent(
     ),
     description = "You are a highly accurate classification agent. If you dont know the answer, you will return IDK",
     instruction="""Your goal is to create a dictionary:
-                    1) You must first get the the list of items from {Items_Bought},  
+                    1) You must first get the the list of items from {+Items_Bought+},  
                     2) for each item in the list, classify the item as "perishable" or "non-perishable" or "semi-perishable" item.
                     3) for each item that is perishable, get an estimated number of weeks the item will last. Store this as EST_WEEKS (a number).
-                    4) Get the upload_date from {Items_Bought} in the format '%Y/%m/%d' and calculate predicted_expiry_date by adding EST_WEEKS to it. 
+                    4) Get the upload_date from {+Items_Bought+} in the format '%Y/%m/%d' and calculate predicted_expiry_date by adding EST_WEEKS to it. 
                     Your response should be a dictionary containing only the following: item, your classification, upload_date, EST_WEEKS, predicted_expiry_date.
                     You can use the google search tool for the classification and EST_WEEKS.
                     If you dont know, then classify the item as IDK, and the estimated number of weeks as 99.
                     You MUST return ONLY a valid JSON array. No bullet points, no markdown, no explanation text.
                     Do NOT wrap the output in ```json``` code blocks.
-                    
+                                       
                     The output must follow this exact format:
                     [
                         {
@@ -111,7 +111,7 @@ runner = InMemoryRunner(agent=combined_flow)
 async def run_agent_query():
     try:
         response = await runner.run_debug(my_prompt) # The await keyword must be inside an async function
-        print("response created: type: ", type(response))
+        print(f"AI response received: type:{type(response)}, len:{len(response)}")
 
         json_path = os.path.join(app.config['OUT_AI'], app.config['AI_RESPONSE'])
 
@@ -140,13 +140,13 @@ async def run_agent_query():
 
 
 # Run the async function using asyncio
-if __name__ == "__main__":
-    start_main = time.time()
-    asyncio.run(run_agent_query())
-    end_main = time.time()
-    duration = round(end_main - start_main, 2)
-    print("Duration: ", duration)
-    print("✅ Agent Query Done.")
+# if __name__ == "__main__":
+#     start_main = time.time()
+#     asyncio.run(run_agent_query())
+#     end_main = time.time()
+#     duration = round(end_main - start_main, 2)
+#     print("Duration: ", duration)
+#     print("✅ Agent Query Done.")
 
 
 

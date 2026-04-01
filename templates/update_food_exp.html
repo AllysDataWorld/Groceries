@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+{% endblock %}
+
+
+{% block body %}
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"
+            crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+
+
+<p><h1 align="center">Update <br> Items </h1></p>
+
+<div class="container">
+<div class="row">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+			<ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+
+   
+    <div class="form-group">
+
+        <table>
+          <form action="/update_foodexp/{{row.id}}/" method="POST">
+              <tr>
+                <th>ID</th>
+                <th>Item</th>
+                <th>Classification</th>
+                <th>EST Weeks</th>
+                <th></th>
+
+              </tr>     
+              <tr>
+                <th>{{row.id}}</th>
+                <td><input type="text"  value="{{row.item}}"></td>
+                <td><input type="text" name="classification" id="classification" value="{{row.classification}}"></td>
+                <td><input type="text" name="EST_WEEKS" id="EST_WEEKS" value="{{row.EST_WEEKS}}"></td>
+
+
+                <td><input type="submit" value="Update" class="btn btn-info"></td>
+              </tr>
+          </form>
+      </table>
+    </div>
+</div>
+</div>
+
+{% endblock %}
+

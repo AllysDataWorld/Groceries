@@ -1,61 +1,72 @@
-# Groceries
-How to use Groceries App
+# Groceries App
+### How to use Groceries App
+1. FLASK website: Upload the receipt
+2. BULK Upload -> Searches receipt files in specified folder (within `RUN_BULK_UPLOAD.py`)
+   - Bulk will upload the receipt and ask the user to label all empty cells using the website
+   - If the date is not found on the receipt, it'll will assume todays date, and alert/confirm with the user. 
+ 
+### How UPLOAD works:
+1. OCR extracts text from receipt and then writes to 'OCR_text.csv': [filename, store, raw_text]
+2. bought_once, frequent_items = guess_labels_from_DB() --> (Grocery_Items DB)
+   - find_store_item_matches_from_DB(storeItem) --> (Grocery_Items DB)
+   - if not found --> read_Distinct_Grocery_Items(storeItem) --> (Distinct_Grocery_Items.csv)
+3. Last Upload WEBSITE has a Button that calls: guess_label_for_new_items(): 
+   - get_unlabeled_items
+   - do fuzzy matching based on lev dist. --> TODO: on save, update the Distinct_Grocery_Items.csv
+ 
+### bulk_add_grocery_item:
+User saves to database after they have uploaded and made their edits:
+1. update Grocery_Items: transfer all rows from Grocery_TEMP_Items 
+   - delete all rows from Grocery_TEMP_Items
+2. update Food_Expiry:
+   - get_EST_WEEKS_via_Food_Expiry -> if not known ask AI (send_to_ai.txt)
+   - if AI was called: populate_food_expiry_from_json(item_dic, response_table, upload_date)
+        - There is COMMENTED OUT CODE that skips exiting items: #TODO: use this code, however it will impact populate_current_food(); update accordingly
+   - else #AI was NOT called: populate_food_exiry_db(item_dic, upload_date)
+3. update CurrentFood
+    - populate_current_food: insert all non-expired items from Food_Expiry
+4. update Smart_Shopping:
+5. update Shopping_List_Settings
 
-FLASK website: Upload the receipt
-or
-BULK Upload -> Searches receipt files in specified folder (within RUN_BULK_UPLOAD.py)
->> If using Bulk version, it will upload the receipt and ask the user to label all empty cells using the website
--> If the date is not found on the receipt, it'll will assume todays date, and alert/confirm with the user. 
- 
-UPLOAD:
-	> OCR and then writes 'OCR_text.csv': [filename, store, raw_text]
-	> bought_once, frequent_items = guess_labels() rename this to guess_labels_via_Grocery_Items
-		> find_store_item_matches(storeItem) rename this to find_store_item_matches_via_Grocery_Items
 
-Last Upload WEBSITE has a Button that calls: guess_label_for_new_items()... which does a filter: get_unlabeled_items
- 
- 
-AI: COMMENTED OUT:
+### AGENT CODE:
 User Experience: User Uploads new receipt and saves to the Database:
-BACKEND ROUTE: /ai_response/ calls ai_predictedExpiry() in ai_predictedExpiry.py and then brings up 'ai_predictedExpiry.html'
-LOGIC: ai_predictedExpiry(): calls [agent_main.py](ai/agent_predictedExpiry.py) the Agent that writes a JSON file:
-    The grocery item, [perishable or non-perishable], upload_date, estimated number of weeks item will last, predicted_expiry_date.
-    ai_predictedExpiry() read this JSON file and sends it back to HTML.
 
-agent creates a JSON DUMP:
-INPUT: reads send_to_ai.txt by calling get_upload_items_for_AI()
-PROCESSING: categorizes item and predicts end date.
-OUTPUT: (JSON DUMP) app.config['AI_RESPONSE']
+###### Call AGENT:
+agent_predictedExpiry(): calls Google ADK
+  - INPUT: reads send_to_ai.txt by calling get_upload_items_for_AI()
+  - PROCESSING: categorizes item and predicts end date.
+  - OUTPUT: (JSON DUMP) app.config['AI_RESPONSE']
+    - The grocery item, [perishable or non-perishable], upload_date, estimated number of weeks item will last, predicted_expiry_date.
 
-ai calls agent & sends to HTML:
-    INPUT: (JSON DUMP) app.config['AI_RESPONSE']
-    PROCESSING: extracts ai answer from JSON dump
-    OUTPUT: 
-        return to HTML: table
-        DELETE? save as a dataframe: app.config['AI_FOOD_FACTS']
-        DELETE? if answer is in a unexpected data structure: 
-        save answer as a temp JSON dump: app.config['AI_FOOD_FACTS_DUMP']
+###### Extract Info from JUMP:
+ai_predictedExpiry(): recevies dump & sends to HTML:
+  - INPUT: (JSON DUMP) app.config['AI_RESPONSE']
+  - PROCESSING: extracts ai answer (massive JSON drump) into a small JSON dump
+  - OUTPUT:
+    - #TODO save answer as a JSON dump: app.config['AI_FOOD_FACTS_DUMP'] with datetime in filename
+    - #TODO? save as a dataframe: app.config['AI_FOOD_FACTS']
 
+# Backlog TODO: 
+Clean up: 
+1. does it make sense to combine functions: 
+    - uts.convert_date_to_format(thisdate)
+    - uts.parse_date(date_str: str | None)
+    - uts.convert_date
+1. consoliate '/' and '/all_tables/' and '/index2/' 
+2. Possible Bug: I don't think upload date is a part of OCR; and are these dups? 
+    - get_upload_date_from_OCRText
+    - get_upload_date()
+    - get_date_from_TEMP_ITEMS_DB()
 
+3. Refactor: Possibly put these into their own files, as they are doing a lot:
+   - process_uploaded_file
+   - bulk_add_grocery_item
 
-LOGIC: 
-Save to Grocery_Items creates file: send_to_ai.txt
-    At this point, call ai to calculate the end_dates and save to database
-    Add database clean up, when the end date has passed, remove item from database
+4. Update Settings.HTML
+   - add a button to export food_facts db into ai_food_facts.csv
 
-    Save the original(maybe?) AI dump with timedate: app.config['SAVE_DUMP']
+5. Add to 'install.py':
+   - os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
-For each item thats being saved to the grocery database, 
-    example: BREAD
-    see if BREAD exists in the previous Resposnes
-    if not, put in array to call AI
-    otherwise, get information for this item.
-Now each item should have dates.
-    NEW DATABASE: Time_DB -> Purchase Date, Item, Category, classification, EST_WEEKS, ExpiryDate
-    BULK_INSERT into a new database (items we currently have in the fridge): FridgeDB
-        Purchase Date, Item, Category, classification, EST_WEEKS, ExpiryDate
-    New Function: Remove items from FridgeDB that have expired
-    NEW DATABASE: Time_DB -> Item, Category, classification, EST_WEEKS
-
-
-
+6. Add Item -> currnetly only populates only Groceries and GroceryItems

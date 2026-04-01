@@ -3,10 +3,11 @@
 
 {% block body %}
 <p>
-    <h1 align="center">Food Expiry Estimates <br> Table </h1>
+    <h1 align="center">Current Food <br> Table </h1>
+    <h2 align="center">Food in your Fridge </h2>
 </p>
 
-<div class="container" >
+<div class="container">
 <div class="row">
     <p>
         {% with messages = get_flashed_messages() %}
@@ -38,10 +39,9 @@
             <tr>
                 <th>Item</th>
                 <th>Classification</th>
-<!--                <th>Purchase Date</th>-->
+                <th>Purchase Date</th>
                 <th>EST Weeks</th>
-<!--                <th>Predicted Expiry</th>-->
-                <th></th>
+                <th>Predicted Expiry</th>
             </tr>
         </thead>
         <tbody>
@@ -49,14 +49,9 @@
             <tr>
                 <td>{{ row.item }}</td>
                 <td>{{ row.classification }}</td>
-<!--                <td>{{ row.purchase_date.strftime('%Y-%m-%d') }}</td>-->
+                <td>{{ row.purchase_date.strftime('%Y-%m-%d') }}</td>
                 <td>{{ row.EST_WEEKS }}</td>
-<!--                <td>{{ row.predicted_expiry_date.strftime('%Y-%m-%d') }}</td>-->
-
-                <td>
-                    <a href="/update_foodexp/{{row.id}}">Update</a>
-                </td>
-
+                <td>{{ row.predicted_expiry_date.strftime('%Y-%m-%d') }}</td>
 
             </tr>
             {% endfor %}

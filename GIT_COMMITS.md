@@ -393,12 +393,56 @@ GUI updates: Delete page was split into delete.html and settings.html
 
 
 
+	------------COMMIT:MONSTER COMMIT:--------
+git commit -m  "Costes"
+NEW DATABASE: CurrentFood -> Purchase Date, Item, classification, EST_WEEKS, ExpiryDate
+NEW DATABASE: FridgeDB -> Purchase Date, Item, classification, EST_WEEKS, ExpiryDate
+Remove items from FridgeDB that have expired
+User corrects AI EST_WEEKS, and it also updates the FOOD_FACTS DB
+ROUTE UPDATES: 
+        added route for: current_food(), update_foodexp(id), export_food_facts()
+        , delete_all() deletes 7 tables, 
+        fixed bugs
+        removed home(), and now index.html points to homepage('/')
+            temp routes to be merged later '/' & '/index/' & '/index2/' & '/all_tables/'
+bulk_add_grocery_item UPDATES: 
+    after Grocery_Items is updated, get EST_WEEKS from Food_Expiry or AI
+    populate the Food_Expiry, current_food, Smart Shopping, Shopping Settings
+guess_labels_from_DB UPDATES:
+    if label is not in GROCERY_ITEMS database table, then read CSV: Distinct_Grocery_Items(storeItem) 
+
+
+        modified:   README.md                                       --> formatted and more detailed.
+        modified:   models.py                                       --> Added CurrentFood
+        modified:   ai/agent_predictedExpiry.py                     --> Changed {Items_Bought} to {+Items_Bought+} 
+        modified:   ai/ai_predictedExpiry.py                        --> save_food_facts() now saves a JUMP and CSV
+        new file:   ai/populate_current_food.py                     --> run once to populate db
+        modified:   config.py
+        modified:   go_shopping/RUN_SHOPPING_FIRST_POPULATE.py      --> note updated TODO: update one row code
+        modified:   go_shopping/get_shopping.py                     --> updated to Config.MIN_PURCHASE
+        modified:   go_shopping/populate_shop_settings.py           
+        modified:   go_shopping/populate_smart_shopping.py          --> fixed a bug: purchases[0]
+        modified:   routes.py                                       --> See NOTES above
+        modified:   templates/base.html                             --> Added and updates links
+        new file:   templates/current_food.html                     --> new page for new table
+        modified:   templates/delete.html                           --> link to delete 5 or 7? tables (CONFIRM THIS)
+        modified:   templates/food_exp.html                         --> standardized: if no rows message
+        new file:   templates/groceries.html                        --> this was index.html; standardized: if no rows message
+        deleted:    templates/home.html 
+        modified:   templates/index.html                            --> now the homepage
+        new file:   templates/index2.html                           --> now the homepage v2
+        modified:   templates/items.html                            --> standardized: if no rows message
+        modified:   templates/shopping.html                         --> standardized: if no rows message
+        new file:   templates/update_food_exp.html                  --> new page for new table
+        modified:   templates/update_item.html                      --> bug fix
+        new file:   templates/wha.html                              --> now the homepage v3
+        modified:   utils.py                                        --> MAJOR UPDATES: see notes
 
 
 
-	------------COMMIT:<testing>--------
-git commit -m  "No Changes. Testing branch"
-I'm doing a test to see how I would use a branch. 
+	------------COMMIT:<NEXT>--------
+git commit -m  "Nonetnch"
+
 
 
 Tasks:

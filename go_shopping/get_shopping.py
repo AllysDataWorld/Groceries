@@ -1,9 +1,11 @@
 from datetime import datetime
 from models import Smart_Shopping, Shopping_List_Settings
 from database import db
+from config import Config
 
 
-def get_shopping_list(threshold=0.8, min_purchases=3):
+
+def get_shopping_list(threshold=0.8, min_purchases=Config.MIN_PURCHASE):
     """
     Generate a smart shopping list based on purchase patterns and depletion prediction.
     Filters out categories based on user settings.
@@ -17,7 +19,7 @@ def get_shopping_list(threshold=0.8, min_purchases=3):
     Returns:
         List of dictionaries containing shopping list items with priority scores
     """
-
+    print(f"get_shopping_list(): Only Items purchased more than {min_purchases} times are included")
     today = datetime.now().date()
     shopping_list = []
 
@@ -89,14 +91,14 @@ def get_shopping_list(threshold=0.8, min_purchases=3):
 
 
 
-def get_shopping_list_summary(threshold=0.8, min_purchases=3):
+def get_shopping_list_summary(threshold=0.8, min_purchases=Config.MIN_PURCHASE):
     """
     Get a summary of the shopping list with statistics.
 
     Returns:
         Dictionary with summary stats and categorized items
     """
-
+    print(f"get_shopping_list_summary(): Only Items purchased more than {min_purchases} times are included")
     shopping_list = get_shopping_list(threshold=threshold, min_purchases=min_purchases)
 
     # Categorize by urgency

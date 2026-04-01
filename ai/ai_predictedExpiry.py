@@ -9,6 +9,7 @@ app.config.from_object(Config)
 def ai_predictedExpiry():
     """Run the agent and read its response"""
 
+    print(f"--- UNCOMMITED OUT---> call AI")
     # Import and execute the agent
     from ai.agent_predictedExpiry import run_agent_query
     asyncio.run(run_agent_query())  # This blocks until the agent finishes
@@ -18,7 +19,6 @@ def ai_predictedExpiry():
 
     if not os.path.exists(temp) or os.path.getsize(temp) == 0:
         return None, "ERR: Agent failed to write output file"
-
     try:
         with open(temp, "r", encoding="utf-8") as f:
             response = json.load(f)
@@ -38,7 +38,6 @@ def ai_predictedExpiry():
 
         if not classify_text:
             return None, "ERR: classify_findings is empty"
-
         try:
             table_data = json.loads(classify_text)
             save_food_facts(table_data)
@@ -78,22 +77,31 @@ def ai_predictedExpiry():
 
 
 def save_food_facts(table):
-    #EXPORT Food facts
-    # SAVED = False
-    # Save as a dataframe?
+    #EXPORT Food facts in two ways: a cumulating CSV and a small JSON DUMP with timestamp
     import pandas as pd
-    # if isinstance(table, list) and isinstance(table[0], dict):
-    #     out_file = os.path.join(app.config['OUT_AI'], app.config['AI_FOOD_FACTS'])
-    #     df = pd.DataFrame()
-    #     SAVED = True
-    #     for row in table:
-    #         tmp_df = pd.DataFrame(data=[row])
-    #         df = pd.concat([tmp_df, df])
-    #     df.to_csv(out_file, index=0)
-    #     print (f'Saved AI_FOOD_FACTS: return {SAVED}')
-    temp_dump = os.path.join(app.config['OUT_AI'], app.config['AI_FOOD_FACTS_DUMP'])
-    with open(temp_dump, "w", encoding="utf-8") as f:
-        json.dump(table, f)
+    if isinstance(table, list) and isinstance(table[0], dict):
+        out_file = os.path.join(app.config['OUT_AI'], app.config['AI_FOOD_FACTS'])
+        orig_df = pd.read_csv(out_file)
+        df = pd.DataFrame()
+        for row in table:
+            tmp_df = pd.DataFrame(data=[row])
+            df = pd.concat([tmp_df, df])
+        df = pd.concat([orig_df, df])
+        df.to_csv(out_file, index=0)
+        print (f'Saved {out_file}')
+
+    temp_dump = os.path.join(app.config['SAVE_DUMP'], app.config['AI_FOOD_FACTS_DUMP'])
+
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"{temp_dump}_{timestamp}.json"
+
+    from datetime import datetime
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(table, f) #TODO: add datetime to filename
+
+    print (f'Saved {filename}')
+
     return None
 
 

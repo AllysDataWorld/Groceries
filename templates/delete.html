@@ -4,28 +4,20 @@
 <p><h1 align="center">Delete Groceries</h1></p>
 </br>
 
-    <div class="container">
-        <div class="row">
-            <div>
-                <p>
-                    {% with messages = get_flashed_messages() %}
-                      {% if messages %}
-                        <ul class="flashes">
-                        {% for message in messages %}
-                          <li>{{ message }}</li>
-                        {% endfor %}
-                        </ul>
-                      {% endif %}
-                    {% endwith %}
-                </p>
-            </div>
-        </div>
-    </div>
+<p><h2 align="center">The following are options to remove rows from ALL databases:</h2></p></br>
+<p align="center"> Groceries, </br>
+    Grocery_Items,</br>
+    Grocery_TEMP_Items,</br>
+    Smart_Shopping,</br>
+    Shopping_List_Settings,</br>
+    Food_Expiry,</br>
+    CurrentFood,</br>
+</p>
+<h1 align="center"><a href="/delete_all/"> Delete all </a></h1>
+</br></br>
 
 
-</br>
-<p><h2 align="center">The following are options to remove all the rows from databases</h1></p>
-</br>
+<p><h2 align="center">The following are options to remove all the rows individual databases</h1></p></br>
 
 <hr>
 <p><h3 align="center">Delete the Last Upload only</h1></p>
@@ -39,9 +31,7 @@
 <hr>
 <p><h3 align="center">Delete the Food Expiry Database only</h3></p>
 <p align="center"><a href="/delete_food_expiry/">Food Expiry Database</a></p>
-<hr>
-<p><h3 align="center">Delete 4 Databases</h1></p>
-<p align="center"><a href="/delete_all/">Delete Text, Item, Last Upload, and Food_Expiry </a></p>
+
 <hr>
 </br></br>
 

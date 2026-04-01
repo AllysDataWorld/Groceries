@@ -3,7 +3,7 @@ import os
 from datetime import date
 
 from app import app, logger
-from models import Groceries, Grocery_Items, Grocery_TEMP_Items, Smart_Shopping, Shopping_List_Settings, Food_Expiry
+from models import Groceries, Grocery_Items, Grocery_TEMP_Items, Smart_Shopping, Shopping_List_Settings, Food_Expiry,CurrentFood
 
 import utils as uts
 from database import db
@@ -20,7 +20,7 @@ from go_shopping.get_shopping import get_shopping_list, get_shopping_list_summar
 def fake_populate_all():
     """fake_populate_all - use for testing."""
 
-    all_items = uts.find_store_item_matches("")  # Get all items
+    all_items = uts.find_store_item_matches_from_DB("")  # Get all items
     unlabeled_items = uts.get_unlabeled_items()
     total_price = uts.get_totalPrice_from_TEMP_ITEMS_DB()
 
@@ -43,6 +43,10 @@ def fake_populate_all():
                            current_date=uts.get_date_from_TEMP_ITEMS_DB().date(),
                            filename=filename, tasks=temp_items)
 
+
+
+
+
 # @app.route("/ai_response/")
 # def ai_response():
 #     from ai.ai_predictedExpiry import get_AI_response
@@ -64,6 +68,11 @@ def food_exp():
     items = Food_Expiry.query.order_by(Food_Expiry.item.desc()).all()
     return render_template('food_exp.html', table_data=items)
 
+@app.route("/current_food/")
+def current_food():
+    items = CurrentFood.query.order_by(CurrentFood.item.desc()).all()
+    return render_template('current_food.html', table_data=items)
+
 
 @app.route('/guess_label_for_new_items/')
 def guess_label_for_new_items():
@@ -73,7 +82,7 @@ def guess_label_for_new_items():
     unlabeled_items = uts.get_unlabeled_items()
     if len(unlabeled_items) > 0:
 
-        all_items = uts.find_store_item_matches("")  # Get all items from DB
+        all_items = uts.find_store_item_matches_from_DB("")  # Get all items from DB
 
         if uts.get_VERBOSE():
             print("\nStart of guess_label_for_new_items():")
@@ -152,11 +161,10 @@ def save_grocery_item():
     message = f"Inserted {len(grocery_items)} items into Grocery_Items. See DIC:{item_dic}"
     logger.info(message)
     print (message)
-    flash(f"Successfully saved {len(grocery_items)} items")
+    flash(f"Successfully saved {len(grocery_items)} items to Groceries, Grocery_Items, Smart_Shopping, Shopping_List_Settings, Food_Expiry, CurrentFood Database tables")
     
-    items = Grocery_Items.query.order_by(Grocery_Items.recepitDate.desc()).all()
-    return render_template('items.html', tasks=items)
-
+    currItems = Food_Expiry.query.order_by(Food_Expiry.item.desc()).all()
+    return render_template('food_exp.html', table_data=currItems)
 
 
 # Routes - Search
@@ -349,16 +357,19 @@ def delete_multiple_items_TempDB():
 def delete_all():
     """Delete all data from all tables."""
     try:
-        Grocery_Items.query.delete()
         Groceries.query.delete()
+        Grocery_Items.query.delete()
         Grocery_TEMP_Items.query.delete()
+        Smart_Shopping.query.delete()
+        Shopping_List_Settings.query.delete()
         Food_Expiry.query.delete()
-        
+        CurrentFood.query.delete()
+
         db.session.commit()
         return render_template('upload.html')
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error deleting 4 tables: {e}")
+        logger.error(f"Error deleting 7 tables: {e}")
         return 'Error delete_all'
 
 @app.route('/delete_food_expiry/')
@@ -564,18 +575,75 @@ def update_temp_item(id):
             return 'Error updating temp item'
 
     return render_template('update_items_temp.html', filename=filename, task=item)
-    
 
+
+@app.route('/update_foodexp/<int:id>/', methods=['GET', 'POST'])
+def update_foodexp(id):
+    """Update Food_Expiry table."""
+    this_item = Food_Expiry.query.get_or_404(id)
+    print(this_item)
+    if request.method == 'POST':
+
+        # this_item.item = request.form['item']
+        this_item.classification = request.form['classification']
+        this_item.EST_WEEKS = request.form['EST_WEEKS']
+
+        try:
+            db.session.commit()
+            return redirect('/food_exp/')
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error update_foodexp item: {e}")
+            return 'Error update_foodexp item'
+
+    return render_template('update_food_exp.html', row=this_item)
 
 
 ########################################################
 # Base Tabs
 ########################################################
 
-@app.route('/home/')
-def home():
-    """Home page."""
-    return render_template('home.html')
+@app.route('/')
+def index():
+    """Main page showing all receipts."""
+    receipts = Groceries.query.order_by(Groceries.upload_date.desc()).all()
+    return render_template('index.html', tasks=receipts)
+
+@app.route('/index2/')
+def index2():
+        text_count = db.session.query(Groceries).count()
+        items_count = db.session.query(Grocery_Items).count()
+        shopping_count = db.session.query(Smart_Shopping).count()
+        food_expiry_count = db.session.query(Food_Expiry).count()
+        current_food_count = db.session.query(CurrentFood).count()
+
+        return render_template(
+            "index2.html",
+            text_db_count=text_count,
+            items_db_count=items_count,
+            food_expiry_db_count=food_expiry_count,
+            current_food_db_count=current_food_count,
+            shopping_db_count=shopping_count
+        )
+@app.route('/all_tables/')
+def all_tables():
+    text_count = db.session.query(Groceries).count()
+    items_count = db.session.query(Grocery_Items).count()
+    shopping_count = db.session.query(Smart_Shopping).count()
+    food_expiry_count = db.session.query(Food_Expiry).count()
+    current_food_count = db.session.query(CurrentFood).count()
+
+    return render_template(
+        "wha.html",
+        text_db_count=text_count,
+        items_db_count=items_count,
+        food_expiry_db_count=food_expiry_count,
+        current_food_db_count=current_food_count,
+        shopping_db_count=shopping_count
+    )
+
+
+
 
 @app.route('/delete_page/')
 def delete_page():
@@ -589,11 +657,15 @@ def settings():
     
     
 
-@app.route('/')
-def index():
+
+
+
+
+@app.route('/groceries/')
+def groceries():
     """Main page showing all receipts."""
     receipts = Groceries.query.order_by(Groceries.upload_date.desc()).all()
-    return render_template('index.html', tasks=receipts)
+    return render_template('groceries.html', tasks=receipts)
 
 @app.route('/items/')
 def items():
@@ -674,10 +746,7 @@ def export_distinct_items():
         #csv_filename = f'distinct_items_{timestamp}.csv'
         csv_filename = "Distinct_Grocery_Items.csv"
         csv_path = os.path.join(app.config['OUTPUT_FOLDER'], csv_filename)
-        
-        # Ensure output folder exists
-        os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
-        
+
         # Write to CSV
         with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
@@ -698,12 +767,52 @@ def export_distinct_items():
 
         logger.info(f"Exported {len(distinct_items)} distinct items to {csv_filename}")
         flash(f"Successfully exported {len(distinct_items)} distinct items to {csv_filename}")
-        return redirect('/delete_page/')
+        return redirect('/settings/')
         
     except Exception as e:
         logger.error(f"Error exporting distinct items: {e}")
         flash(f"Error exporting items: {str(e)}")
-        return redirect('/delete_page/')
+        return redirect('/settings/')
+
+@app.route('/export_food_facts/')
+def export_food_facts():
+    """ food_facts to CSV."""
+    try:
+        # Get distinct combinations of all fields
+        distinct_items = db.session.query(
+            Food_Expiry.item,
+            Food_Expiry.EST_WEEKS
+        ).distinct().all()
+
+        # Create CSV filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        csv_filename = f'export_food_facts_{timestamp}.csv'
+        csv_path = os.path.join(app.config['OUTPUT_FOLDER'], csv_filename)
+
+        # Write to CSV
+        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['item', 'EST_WEEKS'])  # Header
+            for fooditem in distinct_items:
+                # Only write rows where at least myItem has a value (or adjust condition as needed)
+                if fooditem.item:  # Skip rows with null myItem
+                    writer.writerow([
+                        fooditem.item,
+                        fooditem.EST_WEEKS
+                    ])
+                else:
+                    print("Export food_facts: row skipped ", fooditem)
+                    flash("Export food_facts: row skipped ", fooditem)
+
+        logger.info(f"Exported {len(distinct_items)} food_facts to {csv_filename}")
+        flash(f"Successfully exported {len(distinct_items)} food_facts to {csv_filename}")
+        return redirect('/settings/')
+
+    except Exception as e:
+        logger.error(f"Error exporting distinct items: {e}")
+        flash(f"Error exporting items: {str(e)}")
+        return redirect('/settings/')
+
 
 @app.route('/change_recepit_date/', methods=['GET', 'POST'])
 def change_recepit_date():

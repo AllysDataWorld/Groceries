@@ -1,5 +1,7 @@
 
 
+from models import Grocery_Items, Shopping_List_Settings
+from database import db
 
 def populate_shop_settings():
     """
@@ -40,13 +42,4 @@ def populate_shop_settings():
         print(f"Error populating Smart_Shopping: {e}")
         return False
 
-
-
-from models import Grocery_Items, Smart_Shopping, Shopping_List_Settings
-from database import db
-from app import app
-
-# In your Flask app or script
-with app.app_context():
-    populate_shop_settings()
 

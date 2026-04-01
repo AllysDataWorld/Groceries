@@ -1,5 +1,4 @@
 from datetime import datetime
-from sqlalchemy import func
 from models import Grocery_Items, Smart_Shopping
 from database import db
 import statistics
@@ -40,20 +39,19 @@ def populate_smart_shopping():
         first_purchase = purchases[0].recepitDate
         last_purchase = purchases[-1].recepitDate
 
-        my_category = purchases.myCategory #replace the code below.
+        # my_category = purchases[0].myCategory #replace the code below.
         # Get myCategory (use most recent non-null value)
-        # my_category = None
-        # for p in reversed(purchases):
-        #     if p.myCategory:
-        #         my_category = p.myCategory
-        #         break
+        my_category = None
+        for p in reversed(purchases):
+            if p.myCategory:
+                my_category = p.myCategory
+                break
 
         # Calculate average interval and standard deviation
         average_interval = None
         std_deviation = None
 
-        if purchase_count >= 2:
-            # Calculate intervals between consecutive purchases
+        if purchase_count >= 2: # Calculate intervals between 2 consecutive purchases
             intervals = []
             for i in range(1, len(purchases)):
                 prev_date = purchases[i - 1].recepitDate
