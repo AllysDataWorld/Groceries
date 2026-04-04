@@ -22,6 +22,8 @@ from sqlalchemy.orm import Session, sessionmaker
 # Custom imports
 
 
+import werkzeug
+werkzeug.serving._log_add_style = False
 
 log_file = 'logs/log.log'
 
@@ -35,6 +37,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# LOG prints out each webpage the user clicks on (which I want to keep) and also prints out each time the CSS/JS was called, which I want to remove.
+# This disable = True code below removes routes + CSS + JS
+# log = logging.getLogger('werkzeug')
+# log.disabled = True
+
+# This code below removes just the 'ANSI colors from Werkzeug logs'
+# "[36mGET /static/css/date_warning.css HTTP/1.1[0m" 304 -
+class NoStaticFilter(logging.Filter):
+    def filter(self, record):
+        # Exclude requests for static files or specific extensions
+        message = record.getMessage()
+        return "/static/" not in message and ".css" not in message
+logging.getLogger("werkzeug").addFilter(NoStaticFilter())
 
 
 # Initialize Flask app

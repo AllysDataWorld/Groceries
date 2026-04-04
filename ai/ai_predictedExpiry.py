@@ -10,9 +10,12 @@ def ai_predictedExpiry():
     """Run the agent and read its response"""
 
     print(f"--- UNCOMMITED OUT---> call AI")
-    # Import and execute the agent
-    from ai.agent_predictedExpiry import run_agent_query
-    asyncio.run(run_agent_query())  # This blocks until the agent finishes
+    # Import and execute the agent: See Bug documented here: GIT_COMMITS:"AI SCOPE BUG" @ commit message: "FIXED AI BUG"
+    # reload the module, then access the function from it
+    import importlib
+    import ai.agent_predictedExpiry as agent_module
+    importlib.reload(agent_module)  # reloads the module
+    asyncio.run(agent_module.run_agent_query())  # calls the fresh function. Also this blocks until the agent finishes
 
     # Now read the freshly written response file
     temp = os.path.join(app.config['OUT_AI'], app.config['AI_RESPONSE'])

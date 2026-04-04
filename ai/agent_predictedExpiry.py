@@ -103,12 +103,12 @@ combined_flow = SequentialAgent(
 )
 print("✅ Groceries_Classifier_Flow created.")
 
-my_prompt = "get the classification for the list of items and then calculate the predicted_expiry_date for each item"
 
-runner = InMemoryRunner(agent=combined_flow)
 
 # Define an async function to contain the await call
 async def run_agent_query():
+    runner = InMemoryRunner(agent=combined_flow)
+    my_prompt = "get the classification for the list of items and then calculate the predicted_expiry_date for each item"
     try:
         response = await runner.run_debug(my_prompt) # The await keyword must be inside an async function
         print(f"AI response received: type:{type(response)}, len:{len(response)}")
@@ -140,13 +140,13 @@ async def run_agent_query():
 
 
 # Run the async function using asyncio
-# if __name__ == "__main__":
-#     start_main = time.time()
-#     asyncio.run(run_agent_query())
-#     end_main = time.time()
-#     duration = round(end_main - start_main, 2)
-#     print("Duration: ", duration)
-#     print("✅ Agent Query Done.")
+if __name__ == "__main__":
+    start_main = time.time()
+    asyncio.run(run_agent_query())
+    end_main = time.time()
+    duration = round(end_main - start_main, 2)
+    print("Duration: ", duration)
+    print("✅ Agent Query Done.")
 
 
 

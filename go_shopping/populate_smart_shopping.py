@@ -102,7 +102,7 @@ def populate_smart_shopping():
     # Commit all changes
     try:
         db.session.commit()
-        print(f"Successfully populated Smart_Shopping with {len(distinct_items)} items")
+        print(f"Successfully populated Smart_Shopping with {len(distinct_items)} items: {distinct_items}")
         return True
     except Exception as e:
         db.session.rollback()

@@ -34,12 +34,12 @@ def populate_shop_settings():
     try:
         db.session.bulk_save_objects(cat_items)
         db.session.commit()
-        print(f"Successfully populated Smart_Shopping with {len(cat_list)} items")
+        print(f"Successfully populated Shopping_List_Settings with {len(cat_list)} items: {cat_list}")
         return True
 
     except Exception as e:
         db.session.rollback()
-        print(f"Error populating Smart_Shopping: {e}")
+        print(f"Error populating Shopping_List_Settings: {e}")
         return False
 
 

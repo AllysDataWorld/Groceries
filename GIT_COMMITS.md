@@ -391,14 +391,11 @@ GUI updates: Delete page was split into delete.html and settings.html
         new file:   templates/settings.html             --> save CSV link only: "Distinct_Grocery_Items.csv"
 
 
-
-
 	------------COMMIT:MONSTER COMMIT:--------
-git commit -m  "Costes"
+git commit -m  "MAJOR UPDATES in Logic: Bulk_Add, Guess_Labels, New DB table: CurrentFood New HTMLs and Routes"
 NEW DATABASE: CurrentFood -> Purchase Date, Item, classification, EST_WEEKS, ExpiryDate
-NEW DATABASE: FridgeDB -> Purchase Date, Item, classification, EST_WEEKS, ExpiryDate
-Remove items from FridgeDB that have expired
-User corrects AI EST_WEEKS, and it also updates the FOOD_FACTS DB
+        Remove items from Food_Expiry that have expired
+User is able to correct EST_WEEKS received from AI, and it also updates the FOOD_FACTS DB
 ROUTE UPDATES: 
         added route for: current_food(), update_foodexp(id), export_food_facts()
         , delete_all() deletes 7 tables, 
@@ -425,18 +422,55 @@ guess_labels_from_DB UPDATES:
         modified:   routes.py                                       --> See NOTES above
         modified:   templates/base.html                             --> Added and updates links
         new file:   templates/current_food.html                     --> new page for new table
+        new file:   templates/update_food_exp.html                  --> new page for new table
         modified:   templates/delete.html                           --> link to delete 5 or 7? tables (CONFIRM THIS)
-        modified:   templates/food_exp.html                         --> standardized: if no rows message
         new file:   templates/groceries.html                        --> this was index.html; standardized: if no rows message
         deleted:    templates/home.html 
         modified:   templates/index.html                            --> now the homepage
         new file:   templates/index2.html                           --> now the homepage v2
+        new file:   templates/wha.html                              --> now the homepage v3
+        modified:   templates/food_exp.html                         --> standardized: if no rows message
         modified:   templates/items.html                            --> standardized: if no rows message
         modified:   templates/shopping.html                         --> standardized: if no rows message
-        new file:   templates/update_food_exp.html                  --> new page for new table
-        modified:   templates/update_item.html                      --> bug fix
-        new file:   templates/wha.html                              --> now the homepage v3
+        modified:   templates/update_item.html                      --> bug fix in submit link
         modified:   utils.py                                        --> MAJOR UPDATES: see notes
+
+
+
+	------------COMMIT:AI SCOPE BUG--------
+git commit -m  "FIXED AI BUG"
+
+The AI BUG: I called both the files below, and it only printed 
+--- UNCOMMITED OUT---> call AI
+--- UNCOMMITED OUT---> call AI
+without actually calling the AI - no print statements inside ai_predictedExpiry.py were executed and the following
+FILES were NOT UPDATED:
+ai_response.json
+ai_food_facts_dump_2026-03-31_16-27-55.json
+ai_food_facts.csv
+
+THE REASON was that since the AGENT was being executed upon import - the first time python imports, it caches everything.
+The second time the same imports are run, it just runs from cache. So it was getting the AGENT call from CACHE! 
+
+agent_predictedExpiry.py
+the runner and prompt definition needs to be called inside the function, otherwise, the agent will be called upon import, instead of when I call the function.
+async def run_agent_query():
+    runner = InMemoryRunner(agent=combined_flow)
+    my_prompt = "get the classification for the list of items and then calculate the predicted_expiry_date for each item"
+
+ai_predictedExpiry.py
+the 
+    import importlib
+    import ai.agent_predictedExpiry as agent_module
+    importlib.reload(agent_module)  # reloads the module
+    asyncio.run(agent_module.run_agent_query())  # calls the fresh function. Also this blocks until the agent finishes
+
+        modified:   ai/agent_predictedExpiry.py             --> fix scoping bug (see notes)
+        modified:   ai/ai_predictedExpiry.py                --> fix scoping bug (see notes)
+        modified:   app.py                                  --> updated log settings to remove extra lines (Called CSS, or JS each time a webpage propagates)
+        modified:   go_shopping/populate_shop_settings.py   --> cosmetic (better print error statement)
+        modified:   go_shopping/populate_smart_shopping.py  --> cosmetic (better print error statement)
+        modified:   routes.py                               --> removing unnecessary ai routes
 
 
 
