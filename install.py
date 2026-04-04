@@ -1,16 +1,19 @@
 import re
 
+import re
+
 def clean_requirements(path="requirements.txt", output="requirements_clean.txt"):
-    # Patterns that indicate Windows or Conda build artifacts
+    # Patterns that indicate invalid or platform-specific entries
     bad_patterns = [
         r"file:///C:/",
         r"C:\\",
         r"C:/",
         r"file:///opt/conda/",
-        r"win32",
-        r"pywin",
-        r"winloop",
-        r"win-inet-pton",
+        r"file:///croot/",
+        r"/croot/",
+        r"/opt/conda/",
+        r"@ file://",        # any local file reference
+        r"\.whl",            # local wheel paths
     ]
 
     # Windows-only packages to remove entirely
@@ -36,9 +39,9 @@ def clean_requirements(path="requirements.txt", output="requirements_clean.txt")
                 print(f"Removing Windows-only package: {stripped}")
                 continue
 
-            # Remove lines containing Windows/Conda paths
+            # Remove lines containing invalid paths
             if any(re.search(p, stripped) for p in bad_patterns):
-                print(f"Removing Windows/Conda entry: {stripped}")
+                print(f"Removing invalid entry: {stripped}")
                 continue
 
             # Keep the line
