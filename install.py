@@ -1,36 +1,55 @@
 import re
 
-def clean_requirements(path="requirements.txt"):
-    # Regex patterns that indicate Windows-specific entries
-    windows_patterns = [
-        r"file:///C:/",   # pip local wheel paths
-        r"C:\\",          # Windows absolute paths
-        r"C:/",           # Windows absolute paths
+def clean_requirements(path="requirements.txt", output="requirements_clean.txt"):
+    # Patterns that indicate Windows or Conda build artifacts
+    bad_patterns = [
+        r"file:///C:/",
+        r"C:\\",
+        r"C:/",
+        r"file:///opt/conda/",
+        r"win32",
+        r"pywin",
+        r"winloop",
+        r"win-inet-pton",
     ]
 
-    cleaned_lines = []
+    # Windows-only packages to remove entirely
+    windows_only = [
+        "pywin32",
+        "pywinpty",
+        "pywin32-ctypes",
+        "winloop",
+        "win-inet-pton",
+    ]
+
+    cleaned = []
 
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
             stripped = line.strip()
 
-            # Skip empty lines
             if not stripped:
                 continue
 
-            # Skip lines that match any Windows pattern
-            if any(re.search(p, stripped) for p in windows_patterns):
-                print(f"Removing Windows-specific entry: {stripped}")
+            # Remove Windows-only packages
+            if any(stripped.lower().startswith(pkg) for pkg in windows_only):
+                print(f"Removing Windows-only package: {stripped}")
                 continue
 
-            cleaned_lines.append(stripped)
+            # Remove lines containing Windows/Conda paths
+            if any(re.search(p, stripped) for p in bad_patterns):
+                print(f"Removing Windows/Conda entry: {stripped}")
+                continue
 
-    # Write cleaned requirements back
-    with open(path, "w", encoding="utf-8") as f:
-        for line in cleaned_lines:
+            # Keep the line
+            cleaned.append(stripped)
+
+    # Write cleaned file
+    with open(output, "w", encoding="utf-8") as f:
+        for line in cleaned:
             f.write(line + "\n")
 
-    print("requirements.txt cleaned successfully!")
+    print(f"Cleaned requirements written to {output}")
 
 # import os
 # folders = [
