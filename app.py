@@ -4,20 +4,21 @@
 # pip install pytesseract flask_sqlalchemy flask_migrate opencv-python
 
 
-
+import os
 import secrets
 import logging
 from pytesseract import pytesseract
 
 from config import Config
-from database import db
+from config import DevConfig, ProdConfig
 
+from database import db
 from flask import Flask
 
 from flask_migrate import Migrate
 import sqlalchemy as sa
 
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker #remove Session import
 
 # Custom imports
 
@@ -59,7 +60,17 @@ app.config['UPLOAD_FOLDER'] = Config.UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = Config.OUTPUT_FOLDER
 #app.config['TEMP_FOLDER'] = Config.TEMP_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = Config.MAX_CONTENT_LENGTH
-app.config['SQLALCHEMY_DATABASE_URI'] = Config.DB_PATH
+
+
+env = os.getenv("FLASK_ENV", "development")
+
+if env == "production":
+    app.config.from_object(ProdConfig)
+    app.config['SQLALCHEMY_DATABASE_URI'] = ProdConfig.DB_PATH
+else:
+    app.config.from_object(DevConfig)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DevConfig.DB_PATH
+
 
 # Initialize extensions
 #db = SQLAlchemy(app)
@@ -67,10 +78,10 @@ db.init_app(app)  # Use init_app instead of passing app directly
 migrate = Migrate(app, db)
 
 # Configure Tesseract
-pytesseract.tesseract_cmd = Config.TESSERACT_CMD
+pytesseract.tesseract_cmd = app.config['TESSERACT_CMD']
 
-# Database setup
-engine = sa.create_engine(Config.DB_PATH)
+# Database setup - Suggested to Remove all of this too
+engine = sa.create_engine(app.config['DB_PATH'])
 connection = engine.connect()
 Session = sessionmaker(bind=engine)
 session = Session()

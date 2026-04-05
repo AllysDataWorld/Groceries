@@ -438,7 +438,7 @@ guess_labels_from_DB UPDATES:
 
 
 	------------COMMIT:AI SCOPE BUG--------
-git commit -m  "FIXED AI BUG"
+git commit -m  "FIXED AI BUG & changed log settings"
 
 The AI BUG: I called both the files below, and it only printed 
 --- UNCOMMITED OUT---> call AI
@@ -471,6 +471,16 @@ the
         modified:   go_shopping/populate_shop_settings.py   --> cosmetic (better print error statement)
         modified:   go_shopping/populate_smart_shopping.py  --> cosmetic (better print error statement)
         modified:   routes.py                               --> removing unnecessary ai routes
+
+	------------COMMIT:Created DEV vs PROD code:--------
+git commit -m  "Updated CONFIG file to create a separate DEV and PROD codebase"
+git cloned onto RaspberryPi, and now I need to have DEV code (in Windows) and a PROD code (for Linux)
+config file now has 3 classes in a hierarchy: Config -> DevConfig, ProdConfig
+
+            modified:   config.py                           --> Major updates here (See notes)
+            modified:   app.py                              --> Updated to use the new CONFIG file structure
+            modified:   ai/testing/agent_web.py             --> file note used: removed error just to get ride of pycharm's red line
+
 
 
 
