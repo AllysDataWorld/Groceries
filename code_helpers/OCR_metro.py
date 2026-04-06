@@ -12,8 +12,8 @@ Tested on:
 
 import cv2
 from pytesseract import pytesseract 
-path_to_tesseract = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-pytesseract.tesseract_cmd = path_to_tesseract 
+from app import app
+pytesseract.tesseract_cmd = app.config['TESSERACT_CMD']
 
 def OCR_metro(imageFile):
     img = cv2.imread(imageFile,cv2.IMREAD_COLOR) #Open the image from which charectors has to be recognized

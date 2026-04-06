@@ -67,9 +67,11 @@ env = os.getenv("FLASK_ENV", "development")
 if env == "production":
     app.config.from_object(ProdConfig)
     app.config['SQLALCHEMY_DATABASE_URI'] = ProdConfig.DB_PATH
+    pytesseract.tesseract_cmd = ProdConfig.TESSERACT_CMD # Configure Tesseract
 else:
     app.config.from_object(DevConfig)
     app.config['SQLALCHEMY_DATABASE_URI'] = DevConfig.DB_PATH
+    pytesseract.tesseract_cmd = DevConfig.TESSERACT_CMD  # Configure Tesseract
 
 
 # Initialize extensions
@@ -77,8 +79,6 @@ else:
 db.init_app(app)  # Use init_app instead of passing app directly
 migrate = Migrate(app, db)
 
-# Configure Tesseract
-pytesseract.tesseract_cmd = app.config['TESSERACT_CMD']
 
 # Database setup - Suggested to Remove all of this too
 engine = sa.create_engine(app.config['DB_PATH'])
@@ -88,6 +88,11 @@ session = Session()
 
 logger.info('\n' + '='*50)
 logger.info('Started Running the Flask App')
+logger.info( """WARNING MESSAGE below is a Flask's built-in warning that fires whenever you use app.run(), regardless of environment.
+ It means you're using Flask's built-in server, not a production WSGI server like Gunicorn.""")
+logger.info(f"Database: {app.config['SQLALCHEMY_DATABASE_URI']}")
+logger.info(f'OCR: {pytesseract.tesseract_cmd}')
+
 
 print ("\n"+"-"*10 +"\n ✅ start app.py:Verbose Messages:" , Config.VERBOSE , "\n")
 mode = "prod" if os.getenv("FLASK_ENV") == "production" else "dev"
@@ -95,5 +100,6 @@ print(f"🚀 Starting Flask in {mode} mode")
 
 # Import models after db.init_app to register them
 import models
+import routes
 
 

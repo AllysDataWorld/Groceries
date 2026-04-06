@@ -55,7 +55,7 @@ def clean_requirements(path="requirements.txt", output="requirements_clean.txt")
     print(f"Cleaned requirements written to {output}")
 
 import os
-folders = [
+MAKE_FOLDERS = [
     "Groceries",
     "Groceries/static",
         "Groceries/static/css",

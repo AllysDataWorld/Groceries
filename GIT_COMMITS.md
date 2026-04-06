@@ -487,9 +487,31 @@ git commit -m  "Adding QA statements"
         modified:   app.py
         modified:   install.py
 
+	------------COMMIT:Pi_QA:--------
+git commit -m  "Adjusting code to work on both env."
+Testing: Start in PROD @ pi: upload a receipt using Windows computer, and also the pi.
+Testing: Start in DEV @ windows: upload a receipt using Windows computer, but pi should not see the website.
+
+Actions and instructions here: WORKFLOW.pdf --> will need to re-export 
+FYI.using FileZilla for moving individual files to pi (instead of commit)
+Setting up system level env field so that its available from VNC and SSH.
+
 
 	------------COMMIT:<NEXT>--------
 git commit -m  "Nonetnch"
+New documentation files: Migration_Pi4000.md and Workflow.pdf that show all the steps that I've done. 
+app.py: fixed a bug to get pytesseract.tesseract_cmd from the appropriate environment (windows vs linux). Updated a logger message to remind myself
+that there's a WARNING that's always printed until I use GUNICORN. Also needed to add import route, but perhaps its not needed?
+OCR_metro bug: I had hard coded the pytesseract.tesseract_cmd path.
+run.py: use the appropriate host for the environment (PROD vs Dev).
+
+        new file:   Migration_Pi4000.md
+        new file:   Workflow.pdf
+        modified:   app.py                          --> See notes: Fixed bug, updated log statement, added import route
+        modified:   code_helpers/OCR_metro.py       --> See notes: Fixed bug: hard coded path
+        modified:   install.py                      --> Used for installation
+        modified:   run.py                          --> PROD vs Dev update 
+        new file:   run_on_pi.sh                    --> does some extra checks on the linux environment
 
 
 
