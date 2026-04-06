@@ -90,6 +90,8 @@ logger.info('\n' + '='*50)
 logger.info('Started Running the Flask App')
 
 print ("\n"+"-"*10 +"\n ✅ start app.py:Verbose Messages:" , Config.VERBOSE , "\n")
+mode = "prod" if os.getenv("FLASK_ENV") == "production" else "dev"
+print(f"🚀 Starting Flask in {mode} mode")
 
 # Import models after db.init_app to register them
 import models

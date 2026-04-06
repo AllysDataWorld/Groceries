@@ -481,7 +481,11 @@ config file now has 3 classes in a hierarchy: Config -> DevConfig, ProdConfig
             modified:   app.py                              --> Updated to use the new CONFIG file structure
             modified:   ai/testing/agent_web.py             --> file note used: removed error just to get ride of pycharm's red line
 
+	------------COMMIT:Pi_QA:--------
+git commit -m  "Adding QA statements"
 
+        modified:   app.py
+        modified:   install.py
 
 
 	------------COMMIT:<NEXT>--------
